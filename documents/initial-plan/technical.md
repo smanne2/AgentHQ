@@ -1,7 +1,7 @@
 # Agent HQ — Technical Design
 
 > Companion to [plan.md](./plan.md) (what & when). This document covers **why & how**: value, architecture, runtime flows, content schemas, tool contracts, design decisions, risks.
-> **Status:** ⏳ Pending review
+> **Status:** ✅ Approved 2026-09-24 — D1 = Python
 > **Last updated:** 2026-09-24
 
 ---
@@ -45,7 +45,7 @@ Starting a new project with a coding agent today means:
                 ▼                                      │ JSON-RPC (stdio)
         ┌────────────────┐                    ┌────────────────────┐
         │  transport/    │◄───────────────────│  tools/            │
-        │  stdio.ts      │   handlers         │  bootstrap, roles, │
+        │  stdio.py      │   handlers         │  bootstrap, roles, │
         └───────┬────────┘                    │  instructions, …   │
                 │                             └───────┬────────────┘
                 │                                     │
@@ -65,62 +65,69 @@ Starting a new project with a coding agent today means:
 ```
 
 **Dependency rule (enforced by lint boundary checks where available):**
-`transport → tools → catalog / state → config`. Nothing below `tools/` imports from `tools/`; nothing imports the MCP SDK except `transport/*` and `registry.ts`. This keeps the content engine independently testable and swappable.
+`transport → tools → catalog / state → config`. Nothing below `tools/` imports from `tools/`; nothing imports the `mcp` SDK except `transport/stdio.py` and `tools/registry.py`. This keeps the content engine independently testable and swappable.
 
-### 2.2 Repository layout (monorepo, decision D3)
+### 2.2 Repository layout (monorepo, decision D3 · Python per D1)
 
 ```
-agent-hq/
-├── server/                     # MCP server (package "agent-hq-server")
-│   ├── src/
-│   │   ├── index.ts            # entry: config → catalog → registry → transport   (~50)
-│   │   ├── config.ts           # env/flags: AGENT_HQ_CONTENT, paths                (~80)
-│   │   ├── schema/             # zod schemas, one file per content kind
-│   │   │   ├── role.ts         #                                                   (~80)
-│   │   │   ├── instruction.ts  #                                                   (~90)
-│   │   │   ├── skill.ts        #                                                   (~80)
-│   │   │   ├── workflow.ts     # phases, checklists, gates                         (~140)
-│   │   │   ├── profile.ts      # profile.yaml + matching rules                     (~120)
-│   │   │   ├── bundle.ts       # bootstrap return shape                            (~90)
-│   │   │   └── index.ts        # re-exports + shared bits                          (~30)
+agent-hq/                                  # monorepo, uv workspace (D3: this repo · D1: Python)
+├── pyproject.toml                        # root: uv workspace members [server, cli]; uv.lock committed
+├── server/                               # package "agent-hq-server" (console script: agent-hq-server)
+│   ├── pyproject.toml                    # deps: mcp (pinned) · pydantic v2 · PyYAML · pathspec
+│   ├── src/agent_hq_server/
+│   │   ├── __init__.py                   # package + version                                  (~10)
+│   │   ├── __main__.py                   # entry: config → catalog → registry → transport     (~20)
+│   │   ├── config.py                     # env/flags: AGENT_HQ_CONTENT, paths                 (~80)
+│   │   ├── schema/                       # pydantic models, one module per content kind
+│   │   │   ├── __init__.py               # re-exports + shared bits                           (~30)
+│   │   │   ├── role.py                   #                                                    (~80)
+│   │   │   ├── instruction.py            # (conventions reuse it)                             (~90)
+│   │   │   ├── skill.py                  #                                                    (~80)
+│   │   │   ├── workflow.py               # phases, checklists, gates                          (~140)
+│   │   │   ├── profile.py                # profile.yaml + matching rules                      (~120)
+│   │   │   └── bundle.py                 # bootstrap return shape                             (~90)
 │   │   ├── catalog/
-│   │   │   ├── frontmatter.ts  # fence split + YAML + validate                     (~140)
-│   │   │   ├── catalog.ts      # tree walk → index + version digest                (~130)
-│   │   │   ├── matcher.ts      # profile pick, tag/applyTo matching                (~150)
-│   │   │   ├── detect.ts       # stack detection from manifest files               (~120)  [P3]
-│   │   │   └── bundle.ts       # onboarding bundle assembly                        (~120)  [P3]
+│   │   │   ├── __init__.py               #                                                    (~10)
+│   │   │   ├── frontmatter.py            # fence split + YAML + validate                      (~140)
+│   │   │   ├── catalog.py                # tree walk → index + version digest                 (~130)
+│   │   │   ├── matcher.py                # profile pick, tag/applyTo matching                 (~150)
+│   │   │   ├── detect.py                 # stack detection from manifest files                (~120)  [P3]
+│   │   │   └── bundle.py                 # onboarding bundle assembly                         (~120)  [P3]
 │   │   ├── tools/
-│   │   │   ├── registry.ts     # attaches all handlers to McpServer                (~90)
-│   │   │   ├── bootstrap.ts    #                                                   (~80)
-│   │   │   ├── roles.ts        # list_roles / get_role                             (~80)
-│   │   │   ├── instructions.ts # list/get                                          (~90)
-│   │   │   ├── skills.ts       # list/get + sibling manifest                       (~100)
-│   │   │   ├── workflows.ts    # list / get / get_checklist                        (~110)
-│   │   │   ├── content-info.ts # version + counts                                  (~50)
-│   │   │   └── state.ts        # report_progress / get_progress                    (~120)  [P6]
+│   │   │   ├── __init__.py               # re-exports                                         (~10)
+│   │   │   ├── registry.py               # attaches all handlers to FastMCP instance          (~90)
+│   │   │   ├── bootstrap.py              #                                                    (~80)
+│   │   │   ├── roles.py                  # list_roles / get_role                              (~80)
+│   │   │   ├── instructions.py           # list/get                                           (~90)
+│   │   │   ├── skills.py                 # list/get + sibling manifest                        (~100)
+│   │   │   ├── workflows.py              # list / get / get_checklist                         (~110)
+│   │   │   ├── content_info.py           # version + counts                                   (~50)
+│   │   │   └── state.py                  # report_progress / get_progress                     (~120)  [P6]
+│   │   ├── transport/
+│   │   │   └── stdio.py                  # FastMCP wiring — only `mcp` SDK touchpoint         (~70)
 │   │   ├── state/
-│   │   │   ├── store.ts        # JSON persistence, atomic write                    (~120)  [P6]
-│   │   │   └── gates.ts        # gate verification + ordering                      (~130)  [P6]
+│   │   │   ├── store.py                  # JSON persistence, atomic write                     (~120)  [P6]
+│   │   │   └── gates.py                  # gate verification + ordering                       (~130)  [P6]
 │   │   └── util/
-│   │       ├── slug.ts         # filename → slug, uniqueness                       (~50)
-│   │       ├── digest.ts       # content tree hash                                 (~60)
-│   │       └── result.ts       # typed error/ok helpers                            (~50)
-│   ├── test/                   # mirrors src/; fixtures/ holds real files
-│   ├── scripts/check-lines.mjs # 300-line CI guard                                 (~40)
-│   ├── package.json · tsconfig.json · eslint.config.js · vitest.config.ts
-├── cli/                        # package "agent-hq" (init, doctor, validate, import, list)
-│   └── src/                    # ~6 small files, reuses server/src via workspace dep
+│   │       ├── slug.py                   # filename → slug, uniqueness                        (~50)
+│   │       ├── digest.py                 # content tree hash                                  (~60)
+│   │       └── result.py                 # typed error/ok helpers                             (~50)
+│   ├── tests/                            # mirrors src/; fixtures/ holds real awesome-copilot files
+│   └── scripts/check_lines.py            # 300-line CI guard                                  (~40)
+├── cli/                                  # package "agent-hq" (typer; console script: agent-hq)
+│   ├── pyproject.toml                    # deps: typer + workspace dep on agent-hq-server
+│   └── src/agent_hq_cli/                 # main · init · doctor · validate · import_cmd · list_cmd  (~50–120 ea)
 ├── client/
-│   └── templates/              # AGENTS.md · mcp.json · .agent-hq/profile.yaml
-├── content/                    # THE content tree (git-versioned)
+│   └── templates/                        # AGENTS.md · mcp.json (uv run) · .agent-hq/profile.yaml
+├── content/                             # THE content tree (git-versioned)
 │   ├── agents/*.agent.md
 │   ├── instructions/*.instructions.md
 │   ├── conventions/*.instructions.md
-│   ├── skills/<name>/SKILL.md  (+ optional scripts/, references/)
+│   ├── skills/<name>/SKILL.md            (+ optional scripts/, references/)
 │   ├── workflows/*.workflow.md
 │   └── profiles/*.profile.yaml
-├── .github/workflows/ci.yml    # lint · typecheck · test · check:lines · content validate
-├── LICENSE (MIT) · README.md · CONTRIBUTING.md · docs/
+├── .github/workflows/ci.yml              # ruff · pyright · pytest · check_lines · content validate
+└── LICENSE (MIT) · README.md · CONTRIBUTING.md · docs/
 ```
 
 Parentheticals are target line counts — all comfortably under the 300-line source-file rule, and the budget is checked in CI. (Documents such as this file are exempt.)
@@ -194,7 +201,7 @@ Flags are *advisory-but-visible*: the AGENTS.md stub instructs the agent to stop
 
 ## 4. Content Schemas
 
-All markdown content = YAML frontmatter + markdown body. Frontmatter is validated with zod; **unknown keys are tolerated (`.passthrough()`)** so awesome-copilot files import with zero rework even as that repo evolves (risk R3).
+All markdown content = YAML frontmatter + markdown body. Frontmatter is validated with pydantic v2; **unknown keys are tolerated (`extra="allow"`)** so awesome-copilot files import with zero rework even as that repo evolves (risk R3).
 
 ### 4.1 Role — `content/agents/*.agent.md`
 
@@ -212,15 +219,15 @@ tags: [design]                           # Agent HQ extension, optional
 You are a principal architect…
 ```
 
-```ts
-// schema/role.ts (sketch)
-export const roleFrontmatter = z.object({
-  name: z.string().optional(),
-  description: z.string().min(1),          // required for every kind
-  model: z.string().optional(),
-  tools: z.array(z.string()).optional(),
-  tags: z.array(tag).optional(),
-}).passthrough();
+```python
+# schema/role.py (sketch)
+class RoleFrontmatter(BaseModel):
+    model_config = ConfigDict(extra="allow")      # tolerate unknown keys (R3)
+    name: str | None = None
+    description: str                             # required for every kind
+    model: str | None = None                     # passthrough (client-specific)
+    tools: list[str] | None = None
+    tags: list[str] | None = None
 ```
 
 ### 4.2 Instruction — `content/instructions/*.instructions.md` (+ conventions)
@@ -309,7 +316,7 @@ defaults:
 
 **Profile selection order (matcher):**
 1. **Pinned** — project's `.agent-hq/profile.yaml` names a profile id → exact pick.
-2. **Auto** — `detect.ts` reads manifest signals from `projectPath` (package.json deps, pyproject.toml, go.mod, Cargo.toml, …) → each profile's `matches` rules score; highest score with ties broken by file order; no score → `default`.
+2. **Auto** — `catalog/detect.py` reads manifest signals from `projectPath` (package.json deps, pyproject.toml, go.mod, Cargo.toml, …) → each profile's `matches` rules score; highest score with ties broken by file order; no score → `default`.
 3. **Fallback** — built-in `default` profile (generic instructions + standard workflow), guaranteed non-empty bundle.
 
 ### 4.6 Skill — `content/skills/<name>/SKILL.md`
@@ -320,7 +327,7 @@ Maps to awesome-copilot / Claude skill convention: `name`, `description`, option
 
 ## 5. Tool Contracts
 
-All tools: JSON input/output (zod-defined), snake_case names under the `agent_hq` prefix. Nine tools in v1 core, two added in phase 6.
+All tools: JSON input/output (pydantic-defined — FastMCP derives each tool's MCP JSON schema from the typed handler signature), snake_case names under the `agent_hq` prefix. Nine tools in v1 core, two added in phase 6.
 
 | Tool | Input | Returns |
 |------|-------|---------|
@@ -370,7 +377,7 @@ Expected size: ~2–4 k tokens for a typical bundle (measured in phase 3; hard c
 
 | # | Decision | Rationale | Alternatives considered |
 |---|----------|-----------|-------------------------|
-| DD1 | **TypeScript** (Node 20+, ESM) + official `@modelcontextprotocol/sdk` + zod | Reference SDK; one language for server *and* CLI; zod is both the content validator and the MCP tool-schema mechanism (single source of truth); awesome-copilot's own tooling is JS | Python `mcp`/FastMCP — fully viable, 1:1 module map; decide in D1 |
+| DD1 | **Python** (≥ 3.11, `uv` workspace) + official `mcp` SDK (FastMCP) + pydantic v2 | Owner decision (D1, 2026-09-24): maintainability for the project owner. Official Python SDK is mature; pydantic v2 doubles as content validator *and* tool-schema mechanism (FastMCP builds MCP schemas from typed handlers); one language for server *and* CLI; `uv` gives fast, reproducible envs + a committed lockfile | TypeScript (`@modelcontextprotocol/sdk` + zod) — technically equally viable; set aside in favor of owner maintainability |
 | DD2 | **stdio** transport in v1 | Every target client supports stdio via a one-file `mcp.json`; zero infra for a single-user local server | Streamable-HTTP (v2) — `transport/http.ts` added later; tools are transport-agnostic by construction |
 | DD3 | **Monorepo**: `server/` + `cli/` + `client/` + `content/` in one git repo | One clone, one version, content changes review alongside code; server takes `AGENT_HQ_CONTENT` path so content can be split into its own repo later with *zero code change* | Separate content repo — deferred; needs its own CI/publishing story |
 | DD4 | **Follow awesome-copilot file conventions**; tolerate unknown frontmatter keys | Community content (800+ files) imports with zero rework; MIT license; conventions are stable & officially schema'd | Inventing our own format — would orphan the ecosystem |
@@ -379,7 +386,7 @@ Expected size: ~2–4 k tokens for a typical bundle (measured in phase 3; hard c
 | DD7 | **State = JSON files** in `~/.agent-hq/state/` (phase 6) | Single user, zero deps, human-inspectable, trivially testable; atomic writes (tmp+rename) | SQLite — v2 if multi-workflow scale demands |
 | DD8 | **≤ 300 lines per source file**, enforced by CI `check:lines` (docs exempt) | User rule; keeps modules swappable & reviewable; per-file budgets in §2.2 make violations visible early | None — this is a fixed requirement |
 | DD9 | **Progressive disclosure** for token efficiency | Bundles stay ~2–4 k tokens; full content on demand | Dump everything at bootstrap — burns context window every session |
-| DD10 | **Pin MCP SDK version; isolate SDK surface** to `transport/` + `registry.ts` | SDK API has churned across 1.x releases; isolation bounds the blast radius of bumps | — |
+| DD10 | **Pin `mcp` SDK version; isolate SDK surface** to `transport/stdio.py` + `tools/registry.py` | The Python SDK's API has churned across releases (FastMCP method renames); isolation bounds the blast radius of version bumps | — |
 
 ---
 
@@ -389,7 +396,7 @@ Expected size: ~2–4 k tokens for a typical bundle (measured in phase 3; hard c
 |---|------|-----------|------------|
 | R1 | Clients differ in how reliably they obey tool outputs (some agents "forget" the workflow) | High | AGENTS.md stub wording tuned per client in phase 4; gates + flags make drift *visible*; real-client smoke tests per D4 |
 | R2 | stdio server CWD ≠ project dir (client spawn quirks) | Medium | `projectPath` is an **explicit required parameter** of bootstrap — no CWD inference anywhere in the critical path |
-| R3 | awesome-copilot frontmatter drift (they add keys/fields over time) | Medium | `.passthrough()` schemas; fixture tests pin snapshots from a dated revision; failures degrade to "tolerated warning", never crash |
+| R3 | awesome-copilot frontmatter drift (they add keys/fields over time) | Medium | pydantic `extra="allow"`; fixture tests pin snapshots from a dated revision; failures degrade to "tolerated warning", never crash |
 | R4 | Token bloat: a profile references too much content → bundle explodes | Low-Med | Bundle size budget + measured in phase 3; oversized instructions return summary + `get_*` pointer instead of body |
 | R5 | State staleness (agent works for hours without reporting) | Medium | `get_progress` shows last-activity timestamps; stub instructs report-per-phase; v2: heartbeat tool |
 | R6 | 300-line discipline erodes over time | Medium | CI `check:lines` (hard fail) + per-file budgets documented in §2.2 |
@@ -402,5 +409,5 @@ Expected size: ~2–4 k tokens for a typical bundle (measured in phase 3; hard c
 
 - **Fixtures:** real awesome-copilot files (agents/instructions/skills) captured at implementation time into `server/test/fixtures/` — compatibility is proven against the actual ecosystem, not synthetic data.
 - **Stack-matching tests** use minimal fake trees (`package.json` with different dep sets, `pyproject.toml`, …) — no network.
-- **E2E (CI):** spawn the built server on stdio, speak raw JSON-RPC: `initialize` → `tools/list` → `bootstrap(fixtureProject)` → `get_checklist` → `report_progress` sequence. This is the regression backbone; runs in seconds.
+- **E2E (CI):** spawn the server (`uv run agent-hq-server`) on stdio, speak raw JSON-RPC: `initialize` → `tools/list` → `bootstrap(fixtureProject)` → `get_checklist` → `report_progress` sequence. This is the regression backbone; runs in seconds.
 - **Performance targets:** catalog load < 100 ms for 500 content files; any tool call < 50 ms (local disk, in-memory index); bundle assembly O(profile refs), not O(content tree).

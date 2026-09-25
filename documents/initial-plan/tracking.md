@@ -16,17 +16,16 @@
 
 ## Overall
 
-⏳ **Detailed plan + full technical design written — pending user review (decisions D1–D6).**
+✅ **Plan approved 2026-09-24 — ready for implementation.** D1 = **Python** (maintainability); D2–D6 as recommended. No code written yet — **Phase 0 (scaffold) is next.**
 
-No implementation has started. Docs: `documents/initial-plan/`.
-Scope note: the ≤ 300-line rule applies to **source scripts only** — plan/design documents are exempt.
+Docs: `documents/initial-plan/`. Scope note: the ≤ 300-line rule applies to **source files only** — plan/design documents are exempt.
 
 ## Phase Board
 
 | Phase | Name | Status | Notes |
 |---|---|---|---|
-| 0 | Scaffold | ⬜ Not started | Blocked on D1 (language) |
-| 1 | Content core | ⬜ Not started | Schemas per kind in `server/src/schema/` |
+| 0 | Scaffold | ⬜ Not started | **Ready** — D1 resolved (Python/uv); next up |
+| 1 | Content core | ⬜ Not started | Pydantic models in `server/src/agent_hq_server/schema/` |
 | 2 | MCP server (9 tools) | ⬜ Not started | stdio via official SDK |
 | 3 | Profiles & matching | ⬜ Not started | detect + bundle; 3+ profiles |
 | 4 | Client artifacts + CLI | ⬜ Not started | AGENTS.md stub, mcp.json, `agent-hq init/doctor/validate` |
@@ -36,46 +35,46 @@ Scope note: the ≤ 300-line rule applies to **source scripts only** — plan/de
 
 ## Open Decisions (awaiting approval)
 
-| # | Decision | Options | Recommendation | Status |
-|---|----------|---------|----------------|--------|
-| D1 | Language / runtime | TypeScript vs Python | **TypeScript** (official MCP SDK, zod, single language server+CLI). Note: current `.gitignore` is the Python template — will swap if TS | ⏳ pending |
-| D2 | Transport | stdio v1 vs remote HTTP | **stdio** (mcp.json template; HTTP = v2 add) | ⏳ pending |
-| D3 | Repo location | this workspace vs fresh repo | **This workspace** (suggest renaming GitHub repo → `agent-hq`) | ⏳ pending |
-| D4 | First validation clients | VS Code + Cline vs Claude Desktop | **VS Code + Cline** | ⏳ pending |
-| D5 | Seed content sourcing | curated awesome-copilot imports + original writes | **Yes** (MIT) | ⏳ pending |
-| D6 | Naming | server `agent-hq-server`, CLI `agent-hq` | Confirm or rename | ⏳ pending |
+| # | Decision | Options | Resolution (2026-09-24) | Status |
+|---|----------|---------|--------------------------|--------|
+| D1 | Language / runtime | TypeScript vs Python | **Python** ≥ 3.11, `uv`, official `mcp` SDK (FastMCP) + pydantic v2 — owner maintainability | ✅ decided |
+| D2 | Transport | stdio v1 vs remote HTTP | **stdio** (mcp.json template; streamable-HTTP = v2 add) | ✅ approved |
+| D3 | Repo location | this workspace vs fresh repo | **This workspace** — rename GitHub repo `special-telegram` → `agent-hq` | ✅ approved |
+| D4 | First validation clients | VS Code + Cline vs Claude Desktop | **VS Code + Cline** (Claude Desktop as second smoke) | ✅ approved |
+| D5 | Seed content sourcing | awesome-copilot imports vs original only | **Curated awesome-copilot imports + original writes** (MIT) | ✅ approved |
+| D6 | Naming | — | server package `agent-hq-server`, CLI package `agent-hq` (console scripts same names) | ✅ approved |
 
 ## Deliverable Checklists
 
-### Phase 0 — Scaffold
-- [ ] `server/package.json` (Node 20+, ESM) + lockfile
-- [ ] `server/tsconfig.json` (strict, NodeNext)
-- [ ] ESLint flat config + Prettier (incl. `max-lines` 300)
-- [ ] `server/scripts/check-lines.mjs` (CI line-budget guard; docs exempt)
-- [ ] vitest config + first test
-- [ ] MCP SDK (pinned) + zod + yaml + glob deps
-- [ ] `.github/workflows/ci.yml` (lint, typecheck, test, check:lines)
-- [ ] Root README skeleton; `.gitignore` matched to stack
+### Phase 0 — Scaffold (Python)
+- [ ] Root `pyproject.toml` (uv workspace: server + cli) + `uv.lock`
+- [ ] `server/pyproject.toml` — `agent-hq-server`; deps: `mcp` (pinned), `pydantic`, `PyYAML`, `pathspec`
+- [ ] `cli/pyproject.toml` — `agent-hq`; `typer` + workspace dep on server
+- [ ] ruff (lint + format) + pyright config
+- [ ] `server/scripts/check_lines.py` (CI line-budget guard; docs/content excluded)
+- [ ] pytest config + first test
+- [ ] `.github/workflows/ci.yml` (ruff, pyright, pytest, check_lines)
+- [ ] Root README skeleton; `.gitignore` tweaks (already Python template; commit uv.lock)
 
 ### Phase 1 — Content core
-- [ ] `server/src/schema/` (role, instruction, skill, workflow, profile, bundle)
-- [ ] `server/src/catalog/frontmatter.ts`
-- [ ] `server/src/catalog/catalog.ts` (index + version digest)
-- [ ] `server/src/catalog/matcher.ts` (profile pick, tag/applyTo)
-- [ ] `server/src/util/` (slug, digest, result)
+- [ ] `server/src/agent_hq_server/schema/` (role, instruction, skill, workflow, profile, bundle — pydantic)
+- [ ] `server/src/agent_hq_server/catalog/frontmatter.py`
+- [ ] `server/src/agent_hq_server/catalog/catalog.py` (index + version digest)
+- [ ] `server/src/agent_hq_server/catalog/matcher.py` (profile pick, tag/applyTo)
+- [ ] `server/src/agent_hq_server/util/` (slug, digest, result)
 - [ ] Tests incl. **real awesome-copilot files** as fixtures + malformed-input tests
 
 ### Phase 2 — MCP server
-- [ ] `server/src/config.ts`
-- [ ] `server/src/transport/stdio.ts` (SDK isolation)
-- [ ] `server/src/tools/registry.ts`
-- [ ] `tools/bootstrap.ts`, `roles.ts`, `instructions.ts`, `skills.ts`, `workflows.ts`, `content-info.ts`
-- [ ] `server/src/index.ts` wiring
+- [ ] `server/src/agent_hq_server/config.py`
+- [ ] `server/src/agent_hq_server/transport/stdio.py` (FastMCP — only SDK touchpoint)
+- [ ] `server/src/agent_hq_server/tools/registry.py`
+- [ ] `tools/bootstrap.py`, `roles.py`, `instructions.py`, `skills.py`, `workflows.py`, `content_info.py`
+- [ ] `server/src/agent_hq_server/__main__.py` wiring
 - [ ] MCP Inspector smoke (initialize, `tools/list`, all 9 tools callable)
 
 ### Phase 3 — Profiles & matching
-- [ ] `server/src/catalog/detect.ts` (stack detection)
-- [ ] `server/src/catalog/bundle.ts` (onboarding bundle + size budget)
+- [ ] `server/src/agent_hq_server/catalog/detect.py` (stack detection)
+- [ ] `server/src/agent_hq_server/catalog/bundle.py` (onboarding bundle + size budget)
 - [ ] `content/profiles/` — `node-web`, `python-oss`, `default`
 - [ ] Tests: different stacks → different bundles; pinned overrides auto
 
@@ -96,9 +95,9 @@ Scope note: the ≤ 300-line rule applies to **source scripts only** — plan/de
 - [ ] Profile→content mappings finalized
 
 ### Phase 6 — Process enforcement (deferrable)
-- [ ] `server/src/state/store.ts` (`~/.agent-hq/state/`, atomic JSON)
-- [ ] `server/src/state/gates.ts` (manual / artifact / checklist-complete + ordering)
-- [ ] `server/src/tools/state.ts` (`report_progress` / `get_progress`)
+- [ ] `server/src/agent_hq_server/state/store.py` (`~/.agent-hq/state/`, atomic JSON)
+- [ ] `server/src/agent_hq_server/state/gates.py` (manual / artifact / checklist-complete + ordering)
+- [ ] `server/src/agent_hq_server/tools/state.py` (`report_progress` / `get_progress`)
 - [ ] Gate pass/fail/skip tests incl. tamper case
 
 ### Phase 7 — Validation & docs
@@ -111,5 +110,6 @@ Scope note: the ≤ 300-line rule applies to **source scripts only** — plan/de
 
 | Date | Change |
 |---|---|
+| 2026-09-24 | **Plan approved.** D1 = Python (owner maintainability) — all docs re-pointed from TypeScript to Python: `uv` workspace, official `mcp` SDK (FastMCP), pydantic v2, ruff + pyright + pytest, `check_lines` guard. D2–D6 approved as recommended. Ready for Phase 0 |
 | 2026-09-24 | Detailed plan finalized for review: `plan.md` expanded to full phase/task/acceptance detail; `technical.md` completed (was stub — now architecture, runtime flows, content schemas, tool contracts, decisions DD1–DD10, risks R1–R8); verified awesome-copilot conventions + official schemas from the live repo; 300-line rule scoped to source files only (docs exempt); decisions D5/D6 added |
 | 2026-09-24 | Created `documents/initial-plan/` (plan.md, technical.md, tracking.md) — pending review |

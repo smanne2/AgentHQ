@@ -1,7 +1,7 @@
 # Agent HQ — Implementation Plan
 
 > **Feature:** Centralized MCP server that broadcasts agent roles, instructions, skills, and standardized workflows.
-> **Status:** ⏳ **Pending review** — no implementation has started.
+> **Status:** ✅ **Approved 2026-09-24** — ready for implementation (Phase 0). D1 = **Python**; D2–D6 as recommended.
 > **Companion docs:** [technical.md](./technical.md) (design, schemas, tool contracts, decisions, risks) · [tracking.md](./tracking.md) (status board)
 > **Last updated:** 2026-09-24
 
@@ -25,7 +25,7 @@ Content files follow the [awesome-copilot](https://github.com/github/awesome-cop
 
 1. Implementation must be **modular** — one concern per module.
 2. Everything is **grouped logically** — by content kind, tool, transport, etc.
-3. **Any source file (script) ≤ 300 lines** — enforced in CI (`pnpm check:lines`). *Documents (markdown/YAML) are exempt from this rule.*
+3. **Any source file (script) ≤ 300 lines** — enforced in CI (`check:lines` job). *Documents (markdown/YAML) and content files are exempt from this rule.*
 
 ---
 
@@ -101,18 +101,16 @@ Phases are sequenced so each ends in something demonstrable. Dependency chain: *
 
 | # | Task |
 |---|------|
-| 0.1 | `server/package.json` — Node 20+, ESM, scripts: `dev`, `build`, `test`, `lint`, `check:lines`, `start` |
-| 0.2 | `server/tsconfig.json` — strict, ESM, `NodeNext` resolution |
-| 0.3 | ESLint (flat config) + Prettier, incl. `max-lines` = 300 rule (warn now, error in CI) |
-| 0.4 | `scripts/check-lines.mjs` — fails CI if any source file > 300 lines (docs excluded) |
-| 0.5 | vitest config + first trivial test green |
-| 0.6 | Deps: `@modelcontextprotocol/sdk` (pinned), `zod`, `yaml`, `glob`/`micromatch` |
-| 0.7 | `.github/workflows/ci.yml` — lint, typecheck, test, `check:lines` |
-| 0.8 | Repo root: `README.md` (project intro + quickstart skeleton), fix `.gitignore` to match chosen stack |
+| 0.1 | Root `pyproject.toml` — uv workspace (`server` + `cli` members), committed `uv.lock`; Python ≥ 3.11 |
+| 0.2 | `server/pyproject.toml` — package `agent-hq-server` (console script `agent-hq-server`); deps: `mcp` (official Python SDK, pinned), `pydantic` v2, `PyYAML`, `pathspec` |
+| 0.3 | `cli/pyproject.toml` — package `agent-hq` (console script `agent-hq`); deps: `typer` + workspace dep on `agent-hq-server` |
+| 0.4 | ruff (lint + format) + pyright config; `server/scripts/check_lines.py` — fails CI if any `.py` source/test file > 300 lines (docs/content/templates excluded) |
+| 0.5 | pytest config + first trivial test green |
+| 0.6 | `server/src/agent_hq_server/__main__.py` stub — starts, prints banner, exits cleanly |
+| 0.7 | `.github/workflows/ci.yml` — uv setup + sync, ruff check, pyright, pytest, `check:lines`, content validate |
+| 0.8 | Root `README.md` (project intro + quickstart skeleton); `.gitignore` is already the Python template — minor tweaks (commit `uv.lock`, ignore `.venv`) |
 
-**Acceptance:** `pnpm install && pnpm lint && pnpm test && pnpm check:lines` all green; `server/src/index.ts` stub starts and exits cleanly.
-
-**Blocked on:** decision D1 (language). If Python is chosen, 0.1–0.8 map 1:1 to `pyproject.toml`/ruff/pyright/pytest equivalents.
+**Acceptance:** `uv sync && uv run ruff check . && uv run pyright && uv run pytest && uv run python server/scripts/check_lines.py` all green; `uv run agent-hq-server` starts and exits cleanly.
 
 ---
 
@@ -122,14 +120,14 @@ Phases are sequenced so each ends in something demonstrable. Dependency chain: *
 
 | # | Task |
 |---|------|
-| 1.1 | `server/src/schema/role.ts` · `instruction.ts` · `skill.ts` · `workflow.ts` · `profile.ts` · `bundle.ts` — zod schemas per content kind (see technical.md §4) |
-| 1.2 | `server/src/catalog/frontmatter.ts` — split `---` fences, YAML parse, validate against kind schema, tolerate unknown keys |
-| 1.3 | `server/src/catalog/catalog.ts` — walk `content/`, kind by path pattern, build in-memory index + content version digest |
-| 1.4 | `server/src/catalog/matcher.ts` — profile matching: pinned > auto-detect (manifest signals) > fallback; tag/glob matching for instructions |
+| 1.1 | `server/src/agent_hq_server/schema/` — `role.py` · `instruction.py` · `skill.py` · `workflow.py` · `profile.py` · `bundle.py` — pydantic v2 models per content kind (see technical.md §4) |
+| 1.2 | `server/src/agent_hq_server/catalog/frontmatter.py` — split `---` fences, YAML parse, validate against kind model, tolerate unknown keys (`extra="allow"`) |
+| 1.3 | `server/src/agent_hq_server/catalog/catalog.py` — walk `content/`, kind by path pattern, build in-memory index + content version digest |
+| 1.4 | `server/src/agent_hq_server/catalog/matcher.py` — profile matching: pinned > auto-detect (manifest signals) > fallback; tag/glob matching for instructions |
 | 1.5 | Fixture tests: **real awesome-copilot files** downloaded at implementation time (≥3 agents, ≥3 instructions, ≥2 skills) pinned as test fixtures — import-with-zero-rework is proven by tests |
 | 1.6 | Negative tests: malformed frontmatter → clear error with file path (never crashes the index build) |
 
-**Acceptance:** `pnpm test` green incl. awesome-copilot fixtures; catalog index for a sample tree loads < 100 ms.
+**Acceptance:** `uv run pytest` green incl. awesome-copilot fixtures; catalog index for a sample tree loads < 100 ms.
 
 ---
 
@@ -139,19 +137,19 @@ Phases are sequenced so each ends in something demonstrable. Dependency chain: *
 
 | # | Task |
 |---|------|
-| 2.1 | `server/src/config.ts` — env/flags: `AGENT_HQ_CONTENT` path, project path defaults |
-| 2.2 | `server/src/transport/stdio.ts` — SDK isolation layer (the only file touching `@modelcontextprotocol/sdk` transport) |
-| 2.3 | `server/src/tools/registry.ts` — assembles all tool handlers onto one server instance |
-| 2.4 | `tools/bootstrap.ts` — `agent_hq.bootstrap` (bundle assembly lives in `catalog/bundle.ts`, phase 3) |
-| 2.5 | `tools/roles.ts` — `list_roles` / `get_role` |
-| 2.6 | `tools/instructions.ts` — `list_instructions` / `get_instruction` |
-| 2.7 | `tools/skills.ts` — `list_skills` / `get_skill` (incl. sibling-file manifest for skill dirs) |
-| 2.8 | `tools/workflows.ts` — `list_workflows` / `get_workflow` / `get_checklist` |
-| 2.9 | `tools/content-info.ts` — `agent_hq.content_info` (version digest, counts) |
-| 2.10 | `server/src/index.ts` — wire config → catalog → registry → transport |
+| 2.1 | `server/src/agent_hq_server/config.py` — env/flags: `AGENT_HQ_CONTENT` path, project path defaults |
+| 2.2 | `server/src/agent_hq_server/transport/stdio.py` — FastMCP wiring (the only file touching the `mcp` SDK) |
+| 2.3 | `server/src/agent_hq_server/tools/registry.py` — assembles all tool handlers onto one FastMCP instance |
+| 2.4 | `tools/bootstrap.py` — `agent_hq.bootstrap` (bundle assembly lives in `catalog/bundle.py`, phase 3) |
+| 2.5 | `tools/roles.py` — `list_roles` / `get_role` |
+| 2.6 | `tools/instructions.py` — `list_instructions` / `get_instruction` |
+| 2.7 | `tools/skills.py` — `list_skills` / `get_skill` (incl. sibling-file manifest for skill dirs) |
+| 2.8 | `tools/workflows.py` — `list_workflows` / `get_workflow` / `get_checklist` |
+| 2.9 | `tools/content_info.py` — `agent_hq.content_info` (version digest, counts) |
+| 2.10 | `server/src/agent_hq_server/__main__.py` — wire config → catalog → registry → stdio transport |
 | 2.11 | MCP Inspector smoke: initialize, `tools/list` shows all 9 tools, each callable, Inspector round-trips |
 
-**Acceptance:** Inspector session exercises every tool against the sample content tree; all responses typed (zod-validated) and human-readable.
+**Acceptance:** Inspector session exercises every tool against the sample content tree; all responses typed (pydantic-validated) and human-readable.
 
 ---
 
@@ -161,8 +159,8 @@ Phases are sequenced so each ends in something demonstrable. Dependency chain: *
 
 | # | Task |
 |---|------|
-| 3.1 | `server/src/catalog/detect.ts` — stack detection: `package.json` / `pyproject.toml` / `go.mod` / `Cargo.toml` / … signals → stack tags |
-| 3.2 | `server/src/catalog/bundle.ts` — assemble onboarding bundle: profile → workflow + phases, instructions (applyTo match), role roster, skill list, version digest |
+| 3.1 | `server/src/agent_hq_server/catalog/detect.py` — stack detection: `package.json` / `pyproject.toml` / `go.mod` / `Cargo.toml` / … signals → stack tags |
+| 3.2 | `server/src/agent_hq_server/catalog/bundle.py` — assemble onboarding bundle: profile → workflow + phases, instructions (applyTo match), role roster, skill list, version digest |
 | 3.3 | `content/profiles/` — 3+ profiles: `node-web`, `python-oss`, `default` (each a small YAML, see technical.md §4.5) |
 | 3.4 | Wire `bootstrap` to detect + bundle (replaces phase-2 stub behavior) |
 | 3.5 | Tests: fixture trees for different stacks → assert *different* bundles; pinned profile overrides detection; fallback when undetectable |
@@ -178,9 +176,9 @@ Phases are sequenced so each ends in something demonstrable. Dependency chain: *
 | # | Task |
 |---|------|
 | 4.1 | `client/templates/AGENTS.md` — bootstrap stub (exact wording in technical.md §3.1) |
-| 4.2 | `client/templates/mcp.json` — VS Code + Cline server config (stdio command + `AGENT_HQ_CONTENT` env) |
+| 4.2 | `client/templates/mcp.json` — VS Code + Cline server config (stdio: `uv run agent-hq-server` + `AGENT_HQ_CONTENT` env; `init` fills in real paths) |
 | 4.3 | `client/templates/.agent-hq/profile.yaml` — editable pin (stack pre-filled by detection) |
-| 4.4 | `cli/` package — `agent-hq init <dir>` (writes 4.1–4.3, detects stack) |
+| 4.4 | `cli/` (typer app, one module per command) — `agent-hq init <dir>` (writes 4.1–4.3, detects stack) |
 | 4.5 | `cli/` — `agent-hq doctor` (server starts, content loads, bundle non-empty) |
 | 4.6 | `cli/` — `agent-hq validate` (schema-check whole content tree; contributor gate) |
 | 4.7 | **Real-client smoke:** VS Code + Cline on a throwaway project → observe bootstrap call, verify agent follows the workflow (decision D4) |
@@ -213,9 +211,9 @@ Phases are sequenced so each ends in something demonstrable. Dependency chain: *
 
 | # | Task |
 |---|------|
-| 6.1 | `server/src/state/store.ts` — JSON persistence under `~/.agent-hq/state/<project-hash>-<workflow>.json` |
-| 6.2 | `server/src/state/gates.ts` — gate verification: `manual` (requires `approved: true` evidence), `artifact` (glob exists in project), `checklist-complete`, `none`; ordering enforcement (no phase N+1 start before gate N passes) |
-| 6.3 | `tools/state.ts` — `agent_hq.report_progress` + `agent_hq.get_progress` |
+| 6.1 | `server/src/agent_hq_server/state/store.py` — JSON persistence under `~/.agent-hq/state/<project-hash>-<workflow>.json` |
+| 6.2 | `server/src/agent_hq_server/state/gates.py` — gate verification: `manual` (requires `approved: true` evidence), `artifact` (glob exists in project), `checklist-complete`, `none`; ordering enforcement (no phase N+1 start before gate N passes) |
+| 6.3 | `tools/state.py` — `agent_hq.report_progress` + `agent_hq.get_progress` |
 | 6.4 | Tests: gate pass/fail/skip matrix; tamper (report phase 3 without 1–2) → flagged |
 
 **Acceptance:** a client that skips a phase receives explicit flags from `report_progress`/`get_progress` naming what failed.
@@ -242,25 +240,25 @@ Phases are sequenced so each ends in something demonstrable. Dependency chain: *
 
 | Layer | What | Tooling |
 |---|---|---|
-| Unit | frontmatter parse, schemas, matcher, bundle, gates | vitest + real awesome-copilot fixtures |
-| Integration | catalog build over full content tree | vitest |
+| Unit | frontmatter parse, schemas, matcher, bundle, gates | pytest + real awesome-copilot fixtures |
+| Integration | catalog build over full content tree | pytest |
 | MCP protocol | Inspector (manual) + JSON-RPC stdio e2e (automated, CI) | MCP Inspector · spawn script |
 | Real clients | VS Code + Cline smoke (D4) | manual checklist, documented in README |
 | Content quality | schema validation of entire tree | `agent-hq validate` (also CI) |
-| Code discipline | 300-line rule, lint, types | `check:lines` · ESLint · tsc |
+| Code discipline | 300-line rule, lint, types | `check_lines` · ruff · pyright |
 
 ---
 
-## 7. Open Decisions (your call)
+## 7. Decisions (all resolved 2026-09-24)
 
-| # | Decision | Options | Recommendation |
-|---|----------|---------|----------------|
-| **D1** | Language / runtime | TypeScript vs Python | **TypeScript** — official MCP TS SDK is the reference implementation; zod covers both content + tool schemas; single language for server *and* CLI. Note: current `.gitignore` is the Python template — we'll swap it if TS is chosen. (Python `mcp`/FastMCP is a fully workable alternative; module map is 1:1.) |
-| **D2** | Transport | stdio v1 vs remote HTTP | **stdio** for v1 — zero client config friction (mcp.json template). Streamable-HTTP adapter is a v2 add; transport is isolated so it's cheap later. |
-| **D3** | Repo location | this workspace vs fresh repo | **This workspace** — docs + MIT license already here; it's otherwise empty. Suggest renaming the GitHub repo to `agent-hq` (one click, no code impact). |
-| **D4** | First validation clients | VS Code + Cline vs Claude Desktop | **VS Code + Cline** — both consume `mcp.json`-style stdio config and are common agent workbenches; Claude Desktop as second smoke. |
-| **D5** | Seed content sourcing | import curated awesome-copilot subset + original writes | **Yes to both** — MIT license permits; keeps day-one content high-quality. |
-| **D6** | Naming | package `agent-hq`, server binary `agent-hq-server`, CLI `agent-hq` | Confirm or rename. |
+| # | Decision | Options | Resolution |
+|---|----------|---------|------------|
+| **D1** | Language / runtime | TypeScript vs Python | ✅ **Python** (≥ 3.11, `uv`) — owner maintainability; official `mcp` SDK (FastMCP) + pydantic v2; single language for server *and* CLI. Bonus: `.gitignore` is already the Python template — no swap needed. |
+| **D2** | Transport | stdio v1 vs remote HTTP | ✅ **stdio** for v1 — zero client config friction (mcp.json template); streamable-HTTP is a cheap v2 add (transport isolated). |
+| **D3** | Repo location | this workspace vs fresh repo | ✅ **This workspace** — docs + MIT license already here; rename the GitHub repo to `agent-hq`. |
+| **D4** | First validation clients | VS Code + Cline vs Claude Desktop | ✅ **VS Code + Cline** (Claude Desktop as second smoke). |
+| **D5** | Seed content sourcing | awesome-copilot imports vs original writes | ✅ **Both** — curated awesome-copilot subset (MIT) + original Agent HQ content. |
+| **D6** | Naming | — | ✅ server package `agent-hq-server` (console script `agent-hq-server`), CLI package `agent-hq` (console script `agent-hq`). |
 
 ---
 
@@ -270,7 +268,7 @@ Phases are sequenced so each ends in something demonstrable. Dependency chain: *
 - Cross-project memory: `learnings/` content kind (project A's lessons served to project B)
 - `search` tool (keyword/semantic-ish ranking over content)
 - SQLite state backend; multi-user server
-- Distribution to npm / PyPI
+- Distribution to PyPI (`pip`/`uvx agent-hq-server`)
 - MCP *resources* (content as resources, not only tools) for clients that prefer that surface
 - Web dashboard read-only view of state + catalog
 
