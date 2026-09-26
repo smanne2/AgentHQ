@@ -1,0 +1,21 @@
+[project]
+name = "agent-hq-server"
+version = "0.1.0"
+description = "Agent HQ MCP server — typed content service for agent guidance"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=1.2,<2",
+    "pydantic>=2.7",
+    "PyYAML>=6.0",
+    "pathspec>=0.12",
+]
+
+[project.scripts]
+agent-hq-server = "agent_hq_server.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agent_hq_server"]

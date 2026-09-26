@@ -1,0 +1,22 @@
+[project]
+name = "agent-hq"
+version = "0.1.0"
+description = "Agent HQ CLI — init, doctor, validate, import"
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.12",
+    "agent-hq-server",
+]
+
+[project.scripts]
+agent-hq = "agent_hq_cli.main:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agent_hq_cli"]
+
+[tool.uv.sources]
+agent-hq-server = { workspace = true }
