@@ -51,6 +51,15 @@ class SkillView(BaseModel):
     body: str
 
 
+class WorkflowSummary(BaseModel):
+    """Row for ``list_workflows``: phases as {id,title} pairs only (G5)."""
+
+    slug: str
+    name: str | None = None
+    description: str
+    phases: list[dict[str, str]] = Field(default_factory=list)
+
+
 class ChecklistView(BaseModel):
     """Single-phase view of a workflow: what to do + what gates it."""
 

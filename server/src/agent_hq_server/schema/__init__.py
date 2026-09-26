@@ -23,6 +23,7 @@ from agent_hq_server.schema.view import (
     InstructionViewFull,
     RoleView,
     SkillView,
+    WorkflowSummary,
     WorkflowViewFull,
 )
 from agent_hq_server.schema.workflow import Gate, Phase, WorkflowFrontmatter
@@ -53,6 +54,7 @@ __all__ = [
     "SkillSummary",
     "SkillView",
     "WorkflowFrontmatter",
+    "WorkflowSummary",
     "WorkflowView",
     "WorkflowViewFull",
 ]

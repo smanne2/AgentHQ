@@ -53,7 +53,7 @@ def create_server(config: Config) -> FastMCP:
     def bootstrap(
         project_path: str,
         pinned_profile: str | None = None,
-    ) -> Any:
+    ) -> dict[str, Any]:
         """Session start: return this project's onboarding bundle.
 
         Resolves the profile (pinned > detected > fallback) and returns the
@@ -65,24 +65,24 @@ def create_server(config: Config) -> FastMCP:
         return _dump(result)
 
     @mcp.tool(name="agent_hq.content_info")
-    def content_info() -> Any:
+    def content_info() -> dict[str, Any]:
         """Content tree overview: version digest, per-kind counts, profile ids."""
         return _dump(content_info_mod.content_info(catalog))
 
     @mcp.tool(name="agent_hq.list_roles")
-    def list_roles(tag: str | None = None) -> Any:
+    def list_roles(tag: str | None = None) -> dict[str, Any]:
         """List available roles (slug, name, one-line description)."""
         return {"roles": _dump(roles_mod.list_roles(catalog, tag=tag))}
 
     @mcp.tool(name="agent_hq.get_role")
-    def get_role(slug: str) -> Any:
+    def get_role(slug: str) -> dict[str, Any]:
         """Full role: persona prompt body + passthrough fields."""
         return _dump(roles_mod.get_role(catalog, slug))
 
     @mcp.tool(name="agent_hq.list_instructions")
     def list_instructions(
         tag: str | None = None, convention: bool | None = None
-    ) -> Any:
+    ) -> dict[str, Any]:
         """List instructions (and conventions, which are tagged instructions)."""
         return {
             "instructions": _dump(
@@ -93,32 +93,32 @@ def create_server(config: Config) -> FastMCP:
         }
 
     @mcp.tool(name="agent_hq.get_instruction")
-    def get_instruction(slug: str) -> Any:
+    def get_instruction(slug: str) -> dict[str, Any]:
         """Full instruction text (markdown body)."""
         return _dump(instructions_mod.get_instruction(catalog, slug))
 
     @mcp.tool(name="agent_hq.list_skills")
-    def list_skills() -> Any:
+    def list_skills() -> dict[str, Any]:
         """List skills (slug, description, sibling file manifest)."""
         return {"skills": _dump(skills_mod.list_skills(catalog))}
 
     @mcp.tool(name="agent_hq.get_skill")
-    def get_skill(slug: str) -> Any:
+    def get_skill(slug: str) -> dict[str, Any]:
         """Full skill body + sibling file manifest (paths only; never executed)."""
         return _dump(skills_mod.get_skill(catalog, slug))
 
     @mcp.tool(name="agent_hq.list_workflows")
-    def list_workflows() -> Any:
+    def list_workflows() -> dict[str, Any]:
         """List workflows (slug, name, description, phase ids/titles)."""
         return {"workflows": _dump(workflows_mod.list_workflows(catalog))}
 
     @mcp.tool(name="agent_hq.get_workflow")
-    def get_workflow(slug: str, phase_id: str | None = None) -> Any:
+    def get_workflow(slug: str, phase_id: str | None = None) -> dict[str, Any]:
         """Full workflow (all phases), or a single phase's checklist + gate."""
         return _dump(workflows_mod.get_workflow(catalog, slug, phase_id=phase_id))
 
     @mcp.tool(name="agent_hq.get_checklist")
-    def get_checklist(workflow_slug: str, phase_id: str) -> Any:
+    def get_checklist(workflow_slug: str, phase_id: str) -> dict[str, Any]:
         """Checklist for one workflow phase + its gate + what follows it."""
         return _dump(workflows_mod.get_checklist(catalog, workflow_slug, phase_id))
 

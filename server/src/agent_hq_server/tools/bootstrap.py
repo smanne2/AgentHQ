@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from agent_hq_server.catalog.catalog import Catalog, Instruction, Role, Skill
+from agent_hq_server.catalog.catalog import Catalog, Instruction, Role
 from agent_hq_server.catalog.matcher import pick_profile
 from agent_hq_server.catalog.pin import read_pin_file
 from agent_hq_server.schema import (
@@ -61,7 +61,7 @@ def bootstrap(
     next_action = (
         f"Start phase '{first_phase.id}' ({first_phase.title}) of workflow "
         f"'{workflow.slug}': complete its checklist, then call agent_hq.report_progress."
-        if first_phase
+        if first_phase and workflow is not None
         else "No workflow selected — ask the user which process to follow."
     )
 

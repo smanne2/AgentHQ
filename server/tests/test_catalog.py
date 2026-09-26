@@ -104,8 +104,8 @@ def test_counts_helper(tmp_path) -> None:
         "role": 3,
         "instruction": 3,
         "skill": 2,
-        "workflow": 0,
-        "profile": 0,
+        "workflow": 1,
+        "profile": 1,
     }
 
 

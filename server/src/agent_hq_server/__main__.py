@@ -7,6 +7,7 @@ protocol. All paths are overridable via env (see ``config.py``).
 from __future__ import annotations
 
 import argparse
+import sys
 
 from agent_hq_server import __version__
 from agent_hq_server.config import build
@@ -15,6 +16,7 @@ from agent_hq_server.transport.stdio import run_stdio
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    argv = sys.argv[1:] if argv is None else argv
     parser = argparse.ArgumentParser(
         prog="agent-hq-server",
         description="Agent HQ MCP server (stdio). "

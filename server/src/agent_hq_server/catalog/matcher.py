@@ -8,14 +8,15 @@ Phase 3's ``detect.py`` produces them; tests can build them by hand.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from typing import Literal
 
 import pathspec
 from pydantic import BaseModel, ConfigDict
 
-from agent_hq_server.catalog.catalog import Catalog, ProfileItem
+from agent_hq_server.catalog.catalog import Catalog, Instruction, ProfileItem
 from agent_hq_server.schema import FileMatch, Profile
 
-ProfileSource = "pinned" | "auto" | "fallback"
+ProfileSource = Literal["pinned", "auto", "fallback"]
 
 
 def pick_profile(
