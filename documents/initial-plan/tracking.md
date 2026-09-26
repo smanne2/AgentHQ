@@ -16,7 +16,7 @@
 
 ## Overall
 
-✅ **Plan approved 2026-09-24 — ready for implementation.** D1 = **Python** (maintainability); D2–D6 as recommended. No code written yet — **Phase 0 (scaffold) is next.**
+✅ Plan approved 2026-09-24. **Phases 0–1 complete** (scaffold + content core; all gates green: ruff · pyright · pytest 46 ✓ · check_lines). **Phase 2 (MCP server) is next.**
 
 Docs: `documents/initial-plan/`. Scope note: the ≤ 300-line rule applies to **source files only** — plan/design documents are exempt.
 
@@ -24,8 +24,8 @@ Docs: `documents/initial-plan/`. Scope note: the ≤ 300-line rule applies to **
 
 | Phase | Name | Status | Notes |
 |---|---|---|---|
-| 0 | Scaffold | ⬜ Not started | **Ready** — D1 resolved (Python/uv); next up |
-| 1 | Content core | ⬜ Not started | Pydantic models in `server/src/agent_hq_server/schema/` |
+| 0 | Scaffold | ✅ Done | Python/uv workspace, ruff/pyright/pytest/CI, check_lines guard |
+| 1 | Content core | ✅ Done | Pydantic schemas + catalog engine; real awesome-copilot fixtures import clean (46 tests) |
 | 2 | MCP server (9 tools) | ⬜ Not started | stdio via official SDK |
 | 3 | Profiles & matching | ⬜ Not started | detect + bundle; 3+ profiles |
 | 4 | Client artifacts + CLI | ⬜ Not started | AGENTS.md stub, mcp.json, `agent-hq init/doctor/validate` |
@@ -46,23 +46,23 @@ Docs: `documents/initial-plan/`. Scope note: the ≤ 300-line rule applies to **
 
 ## Deliverable Checklists
 
-### Phase 0 — Scaffold (Python)
-- [ ] Root `pyproject.toml` (uv workspace: server + cli) + `uv.lock`
-- [ ] `server/pyproject.toml` — `agent-hq-server`; deps: `mcp` (pinned), `pydantic`, `PyYAML`, `pathspec`
-- [ ] `cli/pyproject.toml` — `agent-hq`; `typer` + workspace dep on server
-- [ ] ruff (lint + format) + pyright config
-- [ ] `server/scripts/check_lines.py` (CI line-budget guard; docs/content excluded)
-- [ ] pytest config + first test
-- [ ] `.github/workflows/ci.yml` (ruff, pyright, pytest, check_lines)
-- [ ] Root README skeleton; `.gitignore` tweaks (already Python template; commit uv.lock)
+### Phase 0 — Scaffold (Python) ✅
+- [x] Root `pyproject.toml` (uv workspace: server + cli) + `uv.lock`
+- [x] `server/pyproject.toml` — `agent-hq-server`; deps: `mcp` (pinned), `pydantic`, `PyYAML`, `pathspec`
+- [x] `cli/pyproject.toml` — `agent-hq`; `typer` + workspace dep on server
+- [x] ruff (lint + format) + pyright config
+- [x] `server/scripts/check_lines.py` (CI line-budget guard; docs/content excluded)
+- [x] pytest config + first test
+- [x] `.github/workflows/ci.yml` (ruff, pyright, pytest, check_lines)
+- [x] Root README skeleton; `.gitignore` tweaks (already Python template; commit uv.lock)
 
-### Phase 1 — Content core
-- [ ] `server/src/agent_hq_server/schema/` (role, instruction, skill, workflow, profile, bundle — pydantic)
-- [ ] `server/src/agent_hq_server/catalog/frontmatter.py`
-- [ ] `server/src/agent_hq_server/catalog/catalog.py` (index + version digest)
-- [ ] `server/src/agent_hq_server/catalog/matcher.py` (profile pick, tag/applyTo)
-- [ ] `server/src/agent_hq_server/util/` (slug, digest, result)
-- [ ] Tests incl. **real awesome-copilot files** as fixtures + malformed-input tests
+### Phase 1 — Content core ✅
+- [x] `server/src/agent_hq_server/schema/` (role, instruction, skill, workflow, profile, bundle — pydantic)
+- [x] `server/src/agent_hq_server/catalog/frontmatter.py`
+- [x] `server/src/agent_hq_server/catalog/catalog.py` (index + version digest)
+- [x] `server/src/agent_hq_server/catalog/matcher.py` (profile pick, tag/applyTo)
+- [x] `server/src/agent_hq_server/util/` (slug, digest, result)
+- [x] Tests incl. **real awesome-copilot files** as fixtures + malformed-input tests
 
 ### Phase 2 — MCP server
 - [ ] `server/src/agent_hq_server/config.py`
@@ -110,6 +110,7 @@ Docs: `documents/initial-plan/`. Scope note: the ≤ 300-line rule applies to **
 
 | Date | Change |
 |---|---|
+| 2026-09-24 | **Phases 0–1 complete.** Scaffold: uv workspace, ruff + pyright + pytest + CI, `check_lines` guard. Content core: pydantic schemas (all 6 kinds), frontmatter parser, catalog indexer + digest, profile/glob matcher, 46 passing tests on real awesome-copilot fixtures. All gates green |
 | 2026-09-24 | **Plan approved.** D1 = Python (owner maintainability) — all docs re-pointed from TypeScript to Python: `uv` workspace, official `mcp` SDK (FastMCP), pydantic v2, ruff + pyright + pytest, `check_lines` guard. D2–D6 approved as recommended. Ready for Phase 0 |
 | 2026-09-24 | Detailed plan finalized for review: `plan.md` expanded to full phase/task/acceptance detail; `technical.md` completed (was stub — now architecture, runtime flows, content schemas, tool contracts, decisions DD1–DD10, risks R1–R8); verified awesome-copilot conventions + official schemas from the live repo; 300-line rule scoped to source files only (docs exempt); decisions D5/D6 added |
 | 2026-09-24 | Created `documents/initial-plan/` (plan.md, technical.md, tracking.md) — pending review |
