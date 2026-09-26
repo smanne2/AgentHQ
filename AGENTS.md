@@ -4,6 +4,14 @@ You are working on **Agent HQ** (a centralized MCP server for agent guidance).
 The approved design lives in [`documents/initial-plan/`](documents/initial-plan/).
 Follow these rules in every session, without exception.
 
+## 0. At the start of every session: read `context.txt`
+
+`context.txt` (repo root) is the cross-session handoff: current state, decisions
+and their reasons, learnings/gotchas, and research pointers. **Read it first**,
+before doing anything else — it replaces long warm-up sessions.
+It is a summary, not the source of truth: for full detail go to
+`documents/{feature}/` (especially `tracking.md` + `technical.md`).
+
 ## 1. Plan before code — planning docs live in `documents/`
 
 For **every new feature** (anything beyond a trivial fix), create the planning
@@ -35,6 +43,8 @@ session** — never defer it:
 - flip the completed checklist items `[ ]` → `[x]`
 - update the phase-board status (⬜ / 🚧 / ✅) and the Overall section
 - add a dated entry to the Change Log
+- if what changed is something a future session needs (state, decisions,
+  learnings), also update `context.txt` — same session, never "later"
 
 A feature is not done until its tracking document reflects reality.
 
