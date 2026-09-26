@@ -12,15 +12,17 @@ from collections.abc import Iterable, Mapping
 import pathspec
 from pydantic import BaseModel, ConfigDict
 
-from agent_hq_server.catalog.catalog import Catalog, Instruction, ProfileItem
+from agent_hq_server.catalog.catalog import Catalog, ProfileItem
 from agent_hq_server.schema import FileMatch, Profile
+
+ProfileSource = "pinned" | "auto" | "fallback"
 
 
 def pick_profile(
     catalog: Catalog,
     pinned_id: str | None = None,
     signals: Mapping[str, str] | None = None,
-) -> tuple[ProfileItem, str]:
+) -> tuple[ProfileItem, ProfileSource]:
     """Return ``(profile_item, source)`` where source is pinned|auto|fallback."""
     profiles = catalog.profiles
     if pinned_id:
@@ -48,7 +50,9 @@ def _score(profile: Profile, signals: Mapping[str, str]) -> int:
     matches = profile.matches
     if matches is None or (not matches.any_of and not matches.all_of):
         return 0
-    if matches.all_of and not all(_rule_matches(rule, signals) for rule in matches.all_of):
+    if matches.all_of and not all(
+        _rule_matches(rule, signals) for rule in matches.all_of
+    ):
         return 0
     any_hits = sum(1 for rule in matches.any_of if _rule_matches(rule, signals))
     return any_hits if matches.any_of else (1 if matches.all_of else 0)
@@ -76,7 +80,9 @@ def match_instructions(
     patterns = list(file_patterns or [])
     selected: list[Instruction] = []
     for item in instructions:
-        if tag is not None and (item.frontmatter.tags is None or tag not in item.frontmatter.tags):
+        if tag is not None and (
+            item.frontmatter.tags is None or tag not in item.frontmatter.tags
+        ):
             continue
         globs = item.frontmatter.apply_to or []
         if not globs or _any_glob_matches(globs, patterns):
