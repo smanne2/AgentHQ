@@ -1,19 +1,21 @@
 """MCP tool registry — the second of two ``mcp`` SDK touchpoints (DD10).
 
 Names follow the ``agent_hq.*`` scheme from technical.md §5 (dots are legal
-per MCP SEP-986). Arguments are snake_case; FastMCP derives each tool's JSON
-schema from the typed handler signature. Handlers take plain values, so they
-stay unit-testable without a running server (tests hit the ``tools/*``
-modules directly; the registry is covered by a stdio round-trip test).
+per MCP SEP-986). JSON keys follow the design's camelCase contract
+(``projectPath``, ``workflowSlug`` …): multi-word parameters carry a
+pydantic alias, single words stay as-is. Handler args are plain values, so
+the semantics live in the unit-tested ``tools/*`` modules; the registry
+itself is covered by a stdio round-trip test (test_mcp_stdio.py).
 """
 
 from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 from mcp.server.fastmcp import FastMCP
+from pydantic import Field
 
 from agent_hq_server.catalog.catalog import load
 from agent_hq_server.config import Config

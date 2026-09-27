@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import json
 import os
-import select
+import queue
 import subprocess
 import sys
+import threading
 from pathlib import Path
 
 import pytest
@@ -40,32 +41,48 @@ class _Client:
     def __init__(self, proc: subprocess.Popen) -> None:
         self.proc = proc
         self._next_id = 0
+        # A reader thread owns the blocking stdout read; `select` on a pipe is
+        # unreliable for text-mode wrappers in some environments (tty/CI).
+        self._lines: queue.Queue[str] = queue.Queue()
+        assert proc.stdout is not None
+        threading.Thread(
+            target=self._read_stdout, args=(proc.stdout,), daemon=True
+        ).start()
 
     def _send(self, message: dict) -> None:
         assert self.proc.stdin is not None
         self.proc.stdin.write(json.dumps(message) + "\n")
         self.proc.stdin.flush()
 
+    def _read_stdout(self, stream: object) -> None:
+        """Copy stdout lines into the queue until the stream closes."""
+        for line in stream:
+            self._lines.put(str(line))
+        self._lines.put(None)  # sentinel: server closed stdout
+
     def _receive(self, deadline: float) -> dict:
-        stream = self.proc.stdout.buffer
-        ready, _, _ = select.select([stream], [], [deadline - _now()])
-        if not ready:
+        remaining = deadline - _now()
+        if remaining <= 0:
             raise TimeoutError("no MCP response within deadline")
-        line = stream.readline()
-        if not line:
+        try:
+            line = self._lines.get(timeout=remaining)
+        except queue.Empty as exc:
+            raise TimeoutError("no MCP response within deadline") from exc
+        if line is None:
             raise AssertionError(
                 f"server closed stdout; stderr: {self._drain_stderr()}"
             )
         return json.loads(line)
 
     def request(
-        self, method: str, params: dict | None = None, deadline: float = TIMEOUT
+        self, method: str, params: dict | None = None, timeout: float = TIMEOUT
     ) -> dict:
         self._next_id += 1
         envelope = {"jsonrpc": "2.0", "id": self._next_id, "method": method}
         if params is not None:
             envelope["params"] = params
         self._send(envelope)
+        deadline = _now() + timeout  # absolute: `_receive` expects a monotonic deadline
         while True:
             message = self._receive(deadline)
             if message.get("id") == self._next_id:
@@ -135,7 +152,7 @@ def test_mcp_stdio_full_roundtrip(project_dir: Path) -> None:
 
         listed = client.request("tools/list")["tools"]
         names = {t["name"] for t in listed}
-        assert EXPECTED_TOOLS == names
+        assert names == EXPECTED_TOOLS
         for tool in listed:  # every schema must be a valid object schema
             assert tool["inputSchema"].get("type") == "object"
 

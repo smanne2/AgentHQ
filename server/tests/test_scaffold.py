@@ -1,12 +1,10 @@
 """Phase 0 smoke tests: workspace wiring, imports, console entry points."""
 
 import pytest
-
 from agent_hq_server import __version__
 
 
 def test_server_package_importable() -> None:
-    from agent_hq_server import __version__
 
     assert __version__ == "0.1.0"
 
