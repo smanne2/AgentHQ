@@ -34,7 +34,22 @@ Do **not** start implementation until the user has explicitly approved the plan
 are **not** approval. If scope changes materially mid-implementation, stop and
 get re-approval before continuing.
 
-## 3. Update the tracking document — automatically, immediately
+## 3. Use the Graphify skill for architecture and relationship questions
+
+When the task involves repo architecture, file relationships, component wiring,
+"where is X implemented", "how does Y connect to Z", or any graph/structure
+question, use the Graphify skill first before broad grep or manual code reading.
+This repo has the local skill installed at `~/.agents/skills/graphify/` and the
+CLI available as `graphify`.
+
+Preferred workflow:
+- run `graphify query "<question>"` for architecture questions
+- use `graphify path "A" "B"` for connection questions
+- use `graphify explain "<concept>"` for focused concept explanations
+
+If `graphify-out/graph.json` already exists, prefer Graphify queries over raw grep.
+
+## 4. Update the tracking document — automatically, immediately
 
 Whenever you complete an implementation unit (a phase, a checklist task, or any
 meaningful part of one), update that feature's `tracking.md` **in the same
