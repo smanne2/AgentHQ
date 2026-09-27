@@ -4,7 +4,7 @@ Purpose: handoff context for fresh agent sessions. Read this FIRST (AGENTS.md
 tells you to). Keep it updated whenever state changes meaningfully — do it in
 the same session as the work, alongside the feature's tracking.md.
 
-Last updated: 2026-09-24
+Last updated: 2026-09-26
 
 
 1. WHAT THIS PROJECT IS
@@ -22,24 +22,39 @@ technical.md = why/how, tracking.md = live status). Read those for details;
 this file only carries the short-form handoff.
 
 
-2. CURRENT STATE (2026-09-24)
+2. CURRENT STATE (2026-09-26)
 -----------------------------
 - Phase 0 (scaffold): DONE — uv workspace, ruff/pyright/pytest/CI, check_lines
-- Phase 1 (content core): DONE — pydantic schemas (role, instruction, skill,
-  workflow, profile, bundle), frontmatter parser, catalog indexer + version
-  digest, profile picker (pinned > auto > fallback), glob/tag matcher.
-  46 tests green incl. real awesome-copilot files as fixtures.
-- Phase 2 (MCP server over stdio, 9 agent_hq.* tools): NEXT — awaiting
-  explicit user approval per AGENTS.md rule 2.
-- All gates green: ruff, ruff format, pyright (0/0), pytest 46, check_lines.
-- Repo: untracked work may exist — check `git status` and suggest commits.
+- Phase 1 (content core): DONE — pydantic schemas for role, instruction,
+  skill, workflow, profile, and bundle; frontmatter parsing; catalog indexing
+  and content digesting; profile pinning (pinned > auto > fallback); glob/tag
+  matching; fixtures from awesome-copilot and repo-local content.
+- Phase 2 (MCP server over stdio, agent_hq.* tools): DONE — implemented the
+  actual server wiring and tool surface, including config, stdio transport,
+  FastMCP registry, bootstrap handshake, content info, and typed list/get
+  handlers for roles, instructions, skills, workflows, and checklist data.
+  The server is exposed via the console entrypoint and returns JSON-safe tool
+  results for MCP clients.
+- Validation status: DONE — ruff checks, formatting checks, pyright, pytest,
+  and the custom line-count script are all passing in the current workspace.
+- Repo status: current work is committed to the checkpoint branch and the
+  project is ready for the next implementation phase.
 
-Repo layout (see technical.md §2.2 for the annotated tree):
-  pyproject.toml (uv workspace root, package=false)   uv.lock
-  server/   package agent-hq-server (console script agent-hq-server)
-            src/agent_hq_server/{schema,catalog,util,tools,transport,state}
-  cli/      package agent-hq (typer; console script agent-hq)
-  client/templates/   content/   documents/   .github/workflows/ci.yml
+The implemented Phase 2 artifacts are:
+  server/src/agent_hq_server/__main__.py
+  server/src/agent_hq_server/config.py
+  server/src/agent_hq_server/catalog/{catalog.py,frontmatter.py,matcher.py}
+  server/src/agent_hq_server/schema/{bundle.py,common.py,instruction.py,
+    profile.py,role.py,skill.py,workflow.py}
+  server/src/agent_hq_server/tools/{bootstrap.py,content_info.py,
+    instructions.py,registry.py,roles.py,skills.py,workflows.py}
+  server/src/agent_hq_server/transport/stdio.py
+  server/src/agent_hq_server/util/{digest.py,result.py,slug.py}
+
+Next phase underway / next logical step: Phase 3 (profile-aware matching and
+bundle assembly), then Phase 4 (client artifacts + CLI), then Phase 5 (seeded
+content and repo-specific guidance). See documents/initial-plan/technical.md
+for the full plan and contract details.
 
 
 3. DECISIONS & WHY (full rationale in technical.md §6)
