@@ -82,15 +82,11 @@ def create_server(config: Config) -> FastMCP:
         return _dump(roles_mod.get_role(catalog, slug))
 
     @mcp.tool(name="agent_hq.list_instructions")
-    def list_instructions(
-        tag: str | None = None, convention: bool | None = None
-    ) -> dict[str, Any]:
+    def list_instructions(tag: str | None = None, convention: bool | None = None) -> dict[str, Any]:
         """List instructions (and conventions, which are tagged instructions)."""
         return {
             "instructions": _dump(
-                instructions_mod.list_instructions(
-                    catalog, tag=tag, convention=convention
-                )
+                instructions_mod.list_instructions(catalog, tag=tag, convention=convention)
             )
         }
 
@@ -115,12 +111,17 @@ def create_server(config: Config) -> FastMCP:
         return {"workflows": _dump(workflows_mod.list_workflows(catalog))}
 
     @mcp.tool(name="agent_hq.get_workflow")
-    def get_workflow(slug: str, phaseId: Annotated[str | None, Field(alias="phaseId")] = None) -> dict[str, Any]:
+    def get_workflow(
+        slug: str, phaseId: Annotated[str | None, Field(alias="phaseId")] = None
+    ) -> dict[str, Any]:
         """Full workflow (all phases), or a single phase's checklist + gate."""
         return _dump(workflows_mod.get_workflow(catalog, slug, phase_id=phaseId))
 
     @mcp.tool(name="agent_hq.get_checklist")
-    def get_checklist(workflowSlug: Annotated[str, Field(alias="workflowSlug")], phaseId: Annotated[str, Field(alias="phaseId")]) -> dict[str, Any]:
+    def get_checklist(
+        workflowSlug: Annotated[str, Field(alias="workflowSlug")],
+        phaseId: Annotated[str, Field(alias="phaseId")],
+    ) -> dict[str, Any]:
         """Checklist for one workflow phase + its gate + what follows it."""
         return _dump(workflows_mod.get_checklist(catalog, workflowSlug, phaseId))
 

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from agent_hq_server.catalog.catalog import Catalog, Instruction, ProfileItem, Role, Skill, Workflow
+from agent_hq_server.catalog.catalog import Catalog, ProfileItem, Skill
 from agent_hq_server.schema import (
     Bundle,
     BundleProfile,
@@ -88,9 +88,7 @@ def _resolve_workflow(catalog: Catalog, slug: str | None) -> WorkflowView | None
     return None
 
 
-def _resolve_instructions(
-    catalog: Catalog, slugs: list[str] | None
-) -> list[InstructionView]:
+def _resolve_instructions(catalog: Catalog, slugs: list[str] | None) -> list[InstructionView]:
     """Resolve instructions by slug, including global instructions."""
     picked: dict[str, InstructionView] = {}
 

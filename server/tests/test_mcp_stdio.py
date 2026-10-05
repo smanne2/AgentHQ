@@ -14,6 +14,7 @@ import subprocess
 import sys
 import threading
 from pathlib import Path
+from typing import IO
 
 import pytest
 
@@ -43,18 +44,16 @@ class _Client:
         self._next_id = 0
         # A reader thread owns the blocking stdout read; `select` on a pipe is
         # unreliable for text-mode wrappers in some environments (tty/CI).
-        self._lines: queue.Queue[str] = queue.Queue()
+        self._lines: queue.Queue[str | None] = queue.Queue()
         assert proc.stdout is not None
-        threading.Thread(
-            target=self._read_stdout, args=(proc.stdout,), daemon=True
-        ).start()
+        threading.Thread(target=self._read_stdout, args=(proc.stdout,), daemon=True).start()
 
     def _send(self, message: dict) -> None:
         assert self.proc.stdin is not None
         self.proc.stdin.write(json.dumps(message) + "\n")
         self.proc.stdin.flush()
 
-    def _read_stdout(self, stream: object) -> None:
+    def _read_stdout(self, stream: IO[str]) -> None:
         """Copy stdout lines into the queue until the stream closes."""
         for line in stream:
             self._lines.put(str(line))
@@ -69,14 +68,10 @@ class _Client:
         except queue.Empty as exc:
             raise TimeoutError("no MCP response within deadline") from exc
         if line is None:
-            raise AssertionError(
-                f"server closed stdout; stderr: {self._drain_stderr()}"
-            )
+            raise AssertionError(f"server closed stdout; stderr: {self._drain_stderr()}")
         return json.loads(line)
 
-    def request(
-        self, method: str, params: dict | None = None, timeout: float = TIMEOUT
-    ) -> dict:
+    def request(self, method: str, params: dict | None = None, timeout: float = TIMEOUT) -> dict:
         self._next_id += 1
         envelope = {"jsonrpc": "2.0", "id": self._next_id, "method": method}
         if params is not None:
@@ -167,9 +162,7 @@ def test_mcp_stdio_full_roundtrip(project_dir: Path) -> None:
         }
         assert info["structuredContent"]["profile_ids"] == ["default"]
 
-        bootstrap = _call(
-            client, "agent_hq.bootstrap", {"projectPath": str(project_dir)}
-        )
+        bootstrap = _call(client, "agent_hq.bootstrap", {"projectPath": str(project_dir)})
         assert bootstrap["isError"] is False
         bundle = bootstrap["structuredContent"]
         assert bundle["profile"] == {
@@ -194,9 +187,7 @@ def test_mcp_stdio_full_roundtrip(project_dir: Path) -> None:
             "address-comments",
             "adr-generator",
         }
-        role = _call(client, "agent_hq.get_role", {"slug": "adr-generator"})[
-            "structuredContent"
-        ]
+        role = _call(client, "agent_hq.get_role", {"slug": "adr-generator"})["structuredContent"]
         assert role["name"] == "ADR Generator" and "ADR" in role["body"]
 
         instructions = _call(client, "agent_hq.list_instructions")["structuredContent"][
@@ -213,14 +204,10 @@ def test_mcp_stdio_full_roundtrip(project_dir: Path) -> None:
             "acquire-codebase-knowledge",
             "code-review",
         }
-        skill = _call(client, "agent_hq.get_skill", {"slug": "code-review"})[
-            "structuredContent"
-        ]
+        skill = _call(client, "agent_hq.get_skill", {"slug": "code-review"})["structuredContent"]
         assert skill["body"] and isinstance(skill["files"], list)
 
-        workflows = _call(client, "agent_hq.list_workflows")["structuredContent"][
-            "workflows"
-        ]
+        workflows = _call(client, "agent_hq.list_workflows")["structuredContent"]["workflows"]
         assert workflows[0]["phases"][0] == {
             "id": "discover",
             "title": "Discovery & Context",
@@ -250,7 +237,7 @@ def test_mcp_stdio_full_roundtrip(project_dir: Path) -> None:
         proc.wait(timeout=10)
 
 
-def test_mcp_stdio_invalid_tool_is_jsonrpc_error(project_dir: Path) -> None:
+def test_mcp_stdio_invalid_tool_is_tool_error(project_dir: Path) -> None:
     proc = _spawn(project_dir)
     try:
         client = _Client(proc)
@@ -263,8 +250,11 @@ def test_mcp_stdio_invalid_tool_is_jsonrpc_error(project_dir: Path) -> None:
             },
         )
         client.notify("notifications/initialized")
-        envelope = client.request("tools/call", {"name": "agent_hq.does_not_exist"})
-        assert envelope["result"]["isError"] is True
+        # SDK 1.30+ surfaces unknown tools as a tool-level error (result with
+        # isError=True), not a JSON-RPC protocol error.
+        result = client.request("tools/call", {"name": "agent_hq.does_not_exist"})
+        assert result["isError"] is True
+        assert "Unknown tool" in result["content"][0]["text"]
     finally:
         proc.terminate()
         proc.wait(timeout=10)

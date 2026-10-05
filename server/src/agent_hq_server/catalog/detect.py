@@ -6,6 +6,7 @@ used by the matcher to pick a profile (technical.md §4.5).
 
 from __future__ import annotations
 
+import contextlib
 from pathlib import Path
 
 
@@ -38,11 +39,8 @@ def detect_stack(project_path: Path) -> dict[str, str]:
     for manifest in manifest_files:
         manifest_path = project_path / manifest
         if manifest_path.is_file():
-            try:
+            with contextlib.suppress(Exception):  # unreadable file: skip it
                 signals[manifest] = manifest_path.read_text(encoding="utf-8")
-            except Exception:
-                # If we can't read the file, skip it
-                pass
 
     return signals
 

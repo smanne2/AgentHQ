@@ -4,7 +4,7 @@ Purpose: handoff context for fresh agent sessions. Read this FIRST (AGENTS.md
 tells you to). Keep it updated whenever state changes meaningfully — do it in
 the same session as the work, alongside the feature's tracking.md.
 
-Last updated: 2026-09-26
+Last updated: 2026-10-05
 
 
 1. WHAT THIS PROJECT IS
@@ -22,23 +22,31 @@ technical.md = why/how, tracking.md = live status). Read those for details;
 this file only carries the short-form handoff.
 
 
-2. CURRENT STATE (2026-09-26)
+2. CURRENT STATE (2026-10-05)
 -----------------------------
 - Phase 0 (scaffold): DONE — uv workspace, ruff/pyright/pytest/CI, check_lines
 - Phase 1 (content core): DONE — pydantic schemas for role, instruction,
   skill, workflow, profile, and bundle; frontmatter parsing; catalog indexing
   and content digesting; profile pinning (pinned > auto > fallback); glob/tag
   matching; fixtures from awesome-copilot and repo-local content.
-- Phase 2 (MCP server over stdio, agent_hq.* tools): DONE — implemented the
-  actual server wiring and tool surface, including config, stdio transport,
-  FastMCP registry, bootstrap handshake, content info, and typed list/get
-  handlers for roles, instructions, skills, workflows, and checklist data.
-  The server is exposed via the console entrypoint and returns JSON-safe tool
-  results for MCP clients.
-- Validation status: DONE — ruff checks, formatting checks, pyright, pytest,
-  and the custom line-count script are all passing in the current workspace.
-- Repo status: current work is committed to the checkpoint branch and the
-  project is ready for the next implementation phase.
+- Phase 2 (MCP server over stdio, agent_hq.* tools): DONE — 11 tools
+  (bootstrap, content_info, list/get roles/instructions/skills/workflows,
+  get_checklist) over FastMCP stdio; console entrypoint agent-hq-server.
+- Phase 3 (profiles & matching): IN PROGRESS —
+  * 3.1 DONE: catalog/detect.py (manifest signals → stack tag)
+  * 3.2 DONE: catalog/bundle.py (assemble_bundle)
+  * 3.3 PARTIAL: content/profiles/{node-web,python-oss}.profile.yaml exist;
+    `default` profile still missing from content/ (fixture-only)
+  * 3.4 OPEN: bootstrap.py still resolves inline — detect.py/bundle.py are
+    exported in catalog/__init__.py but NOT wired into the bootstrap path
+  * 3.5 OPEN: no tests for detect.py/bundle.py yet
+- Validation status (2026-10-05): ALL GATES GREEN — ruff check, ruff format,
+  pyright (0 errors, run via `uvx pyright` in this sandbox), pytest 48 passed,
+  check_lines (43 files). A gate-repair pass fixed lint/format issues in the
+  Phase 3 files + 2 pyright errors + 1 stale-SDK test assertion (see §4).
+- Repo status: Phase 3 work is committed at checkpoint 908b5ad; the gate
+  repair + doc catch-up from 2026-10-05 is the next commit. Next logical step:
+  finish Phase 3 tasks 3.4 (wire bootstrap → detect+bundle) and 3.5 (tests).
 
 The implemented Phase 2 artifacts are:
   server/src/agent_hq_server/__main__.py
@@ -51,10 +59,25 @@ The implemented Phase 2 artifacts are:
   server/src/agent_hq_server/transport/stdio.py
   server/src/agent_hq_server/util/{digest.py,result.py,slug.py}
 
-Next phase underway / next logical step: Phase 3 (profile-aware matching and
-bundle assembly), then Phase 4 (client artifacts + CLI), then Phase 5 (seeded
-content and repo-specific guidance). See documents/initial-plan/technical.md
-for the full plan and contract details.
+The implemented Phase 2 artifacts are:
+  server/src/agent_hq_server/__main__.py
+  server/src/agent_hq_server/config.py
+  server/src/agent_hq_server/catalog/{catalog.py,frontmatter.py,matcher.py}
+  server/src/agent_hq_server/schema/{bundle.py,common.py,instruction.py,
+    profile.py,role.py,skill.py,workflow.py}
+  server/src/agent_hq_server/tools/{bootstrap.py,content_info.py,
+    instructions.py,registry.py,roles.py,skills.py,workflows.py}
+  server/src/agent_hq_server/transport/stdio.py
+  server/src/agent_hq_server/util/{digest.py,result.py,slug.py}
+Phase 3 artifacts added at checkpoint 908b5ad (see phase status above):
+  server/src/agent_hq_server/catalog/{detect.py,bundle.py}
+  content/profiles/{node-web,python-oss}.profile.yaml
+
+Next logical step: Phase 3 tasks 3.4 (wire bootstrap → detect+bundle,
+replacing the inline phase-2 resolution) and 3.5 (tests: different stacks →
+different bundles; pinned overrides auto), then Phase 4 (client artifacts +
+CLI), then Phase 5 (seeded content and repo-specific guidance). See
+documents/initial-plan/technical.md for the full plan and contract details.
 
 
 3. DECISIONS & WHY (full rationale in technical.md §6)
@@ -108,6 +131,27 @@ DD5 Conventions are instructions: same schema, own directory + stack tag —
 - Awesome-copilot's own `workflows/` dir holds repo-ops reports, NOT dev
   processes → our phased workflow type (phases/checklists/gates) is original;
   nothing upstream defines it.
+- uv 0.12.x: bare `uv sync` does NOT install workspace members when the root
+  project has `[tool.uv] package = false` — it even UNINSTALLS previously
+  installed members (pytest then fails with ModuleNotFoundError for
+  agent_hq_server). Use `uv sync --all-packages` (CI already does this;
+  the cheat-sheet below was fixed to match).
+- mcp SDK 1.30.0 (pinned since Phase 0): calling tools/call with an unknown
+  tool name returns a TOOL-level error — result content "Unknown tool: ...",
+  isError=true — NOT a JSON-RPC protocol error. Older SDKs returned a
+  JSON-RPC error; the 2026-09-26 stdio test asserted the old shape and was
+  red on 1.30. Test renamed to *_is_tool_error.
+- Python type-level module `textio` (used for TextIOBase in type stubs) is
+  NOT importable at runtime — pyright flags `import textio` as unresolved.
+  Use `typing.IO[str]` (or `io.TextIOBase`) instead.
+- pyright needs a node runtime: `npx pyright`/`npx pyright` only works where
+  node exists. Fallback that works in this sandbox: `uvx pyright` (uses the
+  repo pyrightconfig.json, 0 errors as of 2026-10-05).
+- graphify CLI (managed CPython 3.10) intermittently dies with
+  "ModuleNotFoundError: No module named 'encodings'" — a retry succeeds.
+  graphify-out/graph.json is built per commit; after code changes run
+  `graphify update .` (no API cost). Disambiguate explain targets as
+  `path::Symbol` when a name matches nodes in multiple files.
 
 
 5. RESEARCH & WHERE TO FIND IT
@@ -131,10 +175,13 @@ DD5 Conventions are instructions: same schema, own directory + stack tag —
 
 6. COMMAND CHEAT-SHEET
 ----------------------
-  uv sync                                   # install/refresh workspace venv
-  uv run pytest                             # tests (46)
+  uv sync --all-packages                    # install/refresh venv (plain `uv sync`
+                                            # does NOT install the server/cli members!)
+  uv run pytest                             # tests (48)
   uv run ruff check . && uv run ruff format --check .
-  npx pyright                               # type check (uses pyrightconfig.json)
+  uvx pyright                               # type check (uses pyrightconfig.json;
+                                            # `npx pyright` where node exists)
   uv run python server/scripts/check_lines.py
-  uv run agent-hq-server                    # server entry stub (Phase 2 wires MCP)
+  uv run agent-hq-server                    # MCP server over stdio
   uv run agent-hq version                   # CLI entry
+  graphify update .                         # refresh the repo graph after code changes
