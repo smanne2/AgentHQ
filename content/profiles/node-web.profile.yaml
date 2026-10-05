@@ -1,0 +1,29 @@
+id: node-web
+name: Node.js Web Service (TypeScript)
+description: TypeScript/Node API or web service projects.
+matches:
+  anyOf:
+    - file: package.json
+    - file: package.json
+      containsAny:
+        - express
+        - fastify
+        - next
+        - typescript
+stack:
+  - typescript
+  - node
+defaults:
+  workflow: standard-feature
+  roles:
+    - architect
+    - engineer
+    - code-reviewer
+    - test-engineer
+  instructions:
+    - git-hygiene
+    - agent-safety
+    - ts-conventions
+    - node-api
+  skills:
+    - acquire-codebase-knowledge

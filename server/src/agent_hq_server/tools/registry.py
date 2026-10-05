@@ -53,8 +53,8 @@ def create_server(config: Config) -> FastMCP:
 
     @mcp.tool(name="agent_hq.bootstrap")
     def bootstrap(
-        project_path: str,
-        pinned_profile: str | None = None,
+        projectPath: Annotated[str, Field(alias="projectPath")],
+        pinnedProfile: Annotated[str | None, Field(alias="pinnedProfile")] = None,
     ) -> dict[str, Any]:
         """Session start: return this project's onboarding bundle.
 
@@ -62,8 +62,8 @@ def create_server(config: Config) -> FastMCP:
         workflow with all phases/checklists/gates, inlined instruction
         bodies, role roster, and skills. Call once per session, first.
         """
-        path = Path(project_path).expanduser().resolve()
-        result = bootstrap_mod.bootstrap(catalog, path, pinned_profile=pinned_profile)
+        path = Path(projectPath).expanduser().resolve()
+        result = bootstrap_mod.bootstrap(catalog, path, pinned_profile=pinnedProfile)
         return _dump(result)
 
     @mcp.tool(name="agent_hq.content_info")
@@ -115,14 +115,14 @@ def create_server(config: Config) -> FastMCP:
         return {"workflows": _dump(workflows_mod.list_workflows(catalog))}
 
     @mcp.tool(name="agent_hq.get_workflow")
-    def get_workflow(slug: str, phase_id: str | None = None) -> dict[str, Any]:
+    def get_workflow(slug: str, phaseId: Annotated[str | None, Field(alias="phaseId")] = None) -> dict[str, Any]:
         """Full workflow (all phases), or a single phase's checklist + gate."""
-        return _dump(workflows_mod.get_workflow(catalog, slug, phase_id=phase_id))
+        return _dump(workflows_mod.get_workflow(catalog, slug, phase_id=phaseId))
 
     @mcp.tool(name="agent_hq.get_checklist")
-    def get_checklist(workflow_slug: str, phase_id: str) -> dict[str, Any]:
+    def get_checklist(workflowSlug: Annotated[str, Field(alias="workflowSlug")], phaseId: Annotated[str, Field(alias="phaseId")]) -> dict[str, Any]:
         """Checklist for one workflow phase + its gate + what follows it."""
-        return _dump(workflows_mod.get_checklist(catalog, workflow_slug, phase_id))
+        return _dump(workflows_mod.get_checklist(catalog, workflowSlug, phaseId))
 
     return mcp
 

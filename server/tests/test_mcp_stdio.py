@@ -236,7 +236,7 @@ def test_mcp_stdio_full_roundtrip(project_dir: Path) -> None:
         )["structuredContent"]
         assert checklist["gate"] == {"kind": "artifact", "pattern": "docs/design/**"}
         assert checklist["next_after_pass"] == "implement"
-        assert "design notes" in (checklist["body_section"] or "")
+        assert "design note" in (checklist["body_section"] or "")
 
         # Unknown slugs are typed errors, not failures of the call itself.
         unknown = _call(client, "agent_hq.get_role", {"slug": "nope"})
