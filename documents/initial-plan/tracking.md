@@ -2,7 +2,7 @@
 
 > Simple status board: what is implemented, what is pending.
 > Companion docs: [plan.md](./plan.md) (detailed phases/tasks) · [technical.md](./technical.md) (design)
-> **Last updated:** 2026-10-05 (Phase 3 complete)
+> **Last updated:** 2026-10-06 (Phases 4 & 5 complete)
 
 ## Status Legend
 
@@ -16,7 +16,7 @@
 
 ## Overall
 
-✅ Plan approved 2026-09-24. **Phases 0–3 complete** (scaffold, content core, MCP server over stdio, and profile-aware matching + bundle assembly). All gates green: ruff · pyright · pytest 60 ✓ · check_lines. **Phase 4 (client artifacts + CLI) is next.**
+✅ Plan approved 2026-09-24. **Phases 0–5 complete** (scaffold, content core, MCP server, profile-aware matching + bundle, client artifacts + CLI, and the seeded content tree). **Phase 6 (process enforcement/state) is in progress**, then Phase 7 (validation & docs). Gates green: ruff · pyright · pytest · check_lines.
 
 Docs: `documents/initial-plan/`. Scope note: the ≤ 300-line rule applies to **source files only** — plan/design documents are exempt.
 
@@ -28,9 +28,9 @@ Docs: `documents/initial-plan/`. Scope note: the ≤ 300-line rule applies to **
 | 1 | Content core | ✅ Done | Pydantic schemas + catalog engine; real awesome-copilot fixtures import clean |
 | 2 | MCP server (9 tools) | ✅ Done | stdio via official SDK; config + transport + registry + bootstrapping + typed list/get tools |
 | 3 | Profiles & matching | ✅ Done | detect → pick_profile (auto) → assemble_bundle wired into bootstrap; 3 profiles; 12 Phase-3 tests; node/python/fallback/pinned all verified |
-| 4 | Client artifacts + CLI | ⬜ Not started | AGENTS.md stub, mcp.json, `agent-hq init/doctor/validate` |
-| 5 | Seed content | ⬜ Not started | ~10 roles, ~6 instructions, 4 workflows, 3 conventions, 3–5 skills |
-| 6 | Process enforcement (state) | ⬜ Not started | Deferrable — v1 works without it |
+| 4 | Client artifacts + CLI | ✅ Done | Templates + `agent-hq init/doctor/validate/import`; init detects stack → writes 3 artifacts; doctor verified server-start + bundle |
+| 5 | Seed content | ✅ Done | 10 roles, 9 instructions (6 + 3 conventions), 4 workflows, 4 skills, 3 profiles; all refs resolve, `validate` clean |
+| 6 | Process enforcement (state) | 🚧 In progress | Deferrable — v1 works without it |
 | 7 | Validation & docs | ⬜ Not started | E2E in CI, README/CONTRIBUTING, v1.0.0 tag |
 
 ## Open Decisions (awaiting approval)
@@ -79,21 +79,22 @@ Docs: `documents/initial-plan/`. Scope note: the ≤ 300-line rule applies to **
 - [x] Wire `bootstrap` to detect + bundle (task 3.4 — pin file > explicit arg > `detect_stack` signals → `pick_profile` → `assemble_bundle`; inline phase-2 resolution removed)
 - [x] Tests: different stacks → different bundles; pinned overrides auto; fallback when undetectable (task 3.5 — `server/tests/test_bundle.py`, 12 tests incl. glob matching + vendor-dir pruning)
 
-### Phase 4 — Client artifacts + CLI
-- [ ] `client/templates/AGENTS.md` (bootstrap stub, final wording)
-- [ ] `client/templates/mcp.json` (VS Code + Cline)
-- [ ] `client/templates/.agent-hq/profile.yaml`
-- [ ] `cli/` — `init`, `doctor`, `validate`
-- [ ] Real-client smoke: VS Code + Cline (D4)
+### Phase 4 — Client artifacts + CLI ✅
+- [x] `client/templates/AGENTS.md` (bootstrap stub — exact technical.md §3.1 wording + detected stack/profile)
+- [x] `client/templates/mcp.json` (stdio: `uv run agent-hq-server` + `AGENT_HQ_CONTENT` env; `init` fills real paths)
+- [x] `client/templates/.agent-hq/profile.yaml` (editable pin, stack pre-filled by detection)
+- [x] `cli/` — `init` (detects stack → writes 3 artifacts), `doctor` (server starts + content loads + non-empty bundle), `validate` (schema-checks tree)
+- [x] `cli` — `import` (5.7): dry-run report + `--copy` verbatim copy
+- [ ] Real-client smoke: VS Code + Cline (D4) — *manual step; documented in README, needs a live client*
 
-### Phase 5 — Seed content
-- [ ] `content/agents/` ~10 roles
-- [ ] `content/instructions/` ~6
-- [ ] `content/conventions/` 3 sets (typescript, node-api, python)
-- [ ] `content/workflows/` 4 (standard-feature, bugfix, refactor, spike)
-- [ ] `content/skills/` 3–5 (incl. acquire-codebase-knowledge import)
-- [ ] `cli` — `agent-hq import <path>` (dry-run report)
-- [ ] Profile→content mappings finalized
+### Phase 5 — Seed content ✅
+- [x] `content/agents/` — 10 roles (architect, engineer, code-reviewer, security-reviewer, test-engineer, docs-writer, refactorer, perf-analyst, api-designer, a11y-reviewer)
+- [x] `content/instructions/` — 6 (git-hygiene, agent-safety, testing-discipline, code-style-generic, doc-updates, commit-messages)
+- [x] `content/conventions/` — 3 (typescript, node-api, python) as tagged instructions
+- [x] `content/workflows/` — 4 (standard-feature, bugfix, refactor, spike) with phases/checklists/gates
+- [x] `content/skills/` — 4 (acquire-codebase-knowledge import + working scan.py/references/templates, adr-writer, test-plan, pre-commit-check)
+- [x] `cli` — `agent-hq import <path>` (dry-run report)
+- [x] Profile→content mappings finalized (all profile slugs resolve; `validate` clean)
 
 ### Phase 6 — Process enforcement (deferrable)
 - [ ] `server/src/agent_hq_server/state/store.py` (`~/.agent-hq/state/`, atomic JSON)
@@ -111,6 +112,7 @@ Docs: `documents/initial-plan/`. Scope note: the ≤ 300-line rule applies to **
 
 | Date | Change |
 |---|---|
+| 2026-10-06 | **Phases 4 & 5 complete.** Phase 4: `client/templates/` (AGENTS.md stub per §3.1, mcp.json, profile.yaml pin) + CLI `init`/`doctor`/`validate`/`import` (one module each in `cli/src/agent_hq_cli/`). `init` detects stack via the server matcher and writes all three artifacts with real paths; `doctor` spawns the real stdio server and verifies a non-empty bundle (verified: node project → node-web profile, server starts). Phase 5: seeded `content/` — 10 roles, 9 instructions (incl. 3 conventions), 4 workflows, 4 skills (acquire-codebase-knowledge imported with a working `scan.py` + references + 7 templates), and 3 profiles reconciled to the real slugs. `agent-hq validate` is clean; every profile→content ref resolves. |
 | 2026-10-05 | **Phase 3 complete.** Wired `bootstrap` to the Phase-3 pipeline (task 3.4): `detect_stack` manifest signals → `pick_profile` auto-match → `assemble_bundle` (rewritten: `source` param, warnings for unknown slugs, applyTo globs evaluated against a pruned scan of the project's file paths). Added `content/profiles/default.profile.yaml` (3.3) and `server/tests/test_bundle.py` — 12 tests: node vs python → different bundles, undetectable → fallback, pin file / explicit arg override detection, glob instructions require matching project files, vendor-dir pruning, ErrorView when no profiles (3.5). Removed dead `detect_stack_from_signals` + unused `BundleMatchInput`. All gates green (pytest 60). |
 | 2026-10-05 | **Gate repair + tracking catch-up.** Phase 3 tasks 3.1–3.2 landed at checkpoint `908b5ad` (`detect.py`, `bundle.py`, 2 profiles in `content/profiles/`) without wiring or tests — 3.4/3.5 still open. Repaired red gates from that checkpoint: ruff lint/format (unsorted imports, F401, E501, SIM105), 2 pyright errors in `test_mcp_stdio.py` reader, and a stale SDK assertion (mcp 1.30+ returns a tool-level `isError` result for unknown tools, not a JSON-RPC error — test renamed to `test_mcp_stdio_invalid_tool_is_tool_error`). All gates green; pyright run via `uvx pyright` (no node in this sandbox; CI keeps `npx -y pyright`). |
 | 2026-09-26 | **Phase 2 complete.** Implemented the stdio MCP server, registry, bootstrap tool, typed content/list/get tools, and config wiring. Revalidated with `ruff`, `pyright`, pytest, and the project guard script — all green. |
