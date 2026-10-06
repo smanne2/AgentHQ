@@ -1,34 +1,32 @@
 # Graph Report - special-telegram  (2026-10-05)
 
 ## Corpus Check
-- 62 files · ~29,633 words
+- 63 files · ~30,514 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 4 file(s) not represented in the graph (top: (none) 2, .toml 1, .lock 1)
 
 ## Summary
-- 687 nodes · 1177 edges · 45 communities (36 shown, 9 thin omitted)
-- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 56 edges (avg confidence: 0.93)
+- 704 nodes · 1259 edges · 39 communities (32 shown, 7 thin omitted)
+- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 59 edges (avg confidence: 0.95)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `908b5ad7`
+- Built from commit: `8657689f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- ContentBase
 - schema/__init__.py
+- ErrorView
 - test_util.py
 - registry.py
 - pathlib
 - 5. Detailed Implementation Plan (phases → tasks → acceptance)
-- matcher.py
 - Accessibility Expert
 - Document Sections
 - test_mcp_stdio.py
 - Agent HQ — Technical Design
 - test_scaffold.py
-- create_server
 - Development Standards
 - Accessibility Standards
 - Acquire Codebase Knowledge
@@ -53,57 +51,53 @@
 - agent-hq
 - agent-hq-workspace
 - Catalog
-- pick_profile
 - load
-- catalog.py
-- detect.py
 - Framework-Specific: Vue (VU1-VU3)
-- _flatten
 
 ## God Nodes (most connected - your core abstractions)
-1. `Catalog` - 36 edges
-2. `load()` - 26 edges
-3. `ErrorView` - 22 edges
-4. `create_server()` - 18 edges
-5. `Accessibility Expert` - 17 edges
-6. `pick_profile()` - 16 edges
-7. `_dump()` - 16 edges
-8. `catalog()` - 16 edges
-9. `Accessibility Standards` - 16 edges
-10. `Development Standards` - 16 edges
+1. `Catalog` - 40 edges
+2. `load()` - 30 edges
+3. `ErrorView` - 20 edges
+4. `assemble_bundle()` - 18 edges
+5. `pick_profile()` - 18 edges
+6. `bootstrap()` - 18 edges
+7. `create_server()` - 18 edges
+8. `Accessibility Expert` - 17 edges
+9. `_dump()` - 16 edges
+10. `Accessibility Standards` - 16 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `Change Log` --references--> `assemble_bundle()`  [INFERRED]
+  documents/initial-plan/tracking.md → server/src/agent_hq_server/catalog/bundle.py
+- `Change Log` --references--> `detect_stack()`  [INFERRED]
+  documents/initial-plan/tracking.md → server/src/agent_hq_server/catalog/detect.py
+- `Change Log` --references--> `pick_profile()`  [INFERRED]
+  documents/initial-plan/tracking.md → server/src/agent_hq_server/catalog/matcher.py
+- `Phase 3 — Profiles & matching ✅` --references--> `pick_profile()`  [INFERRED]
+  documents/initial-plan/tracking.md → server/src/agent_hq_server/catalog/matcher.py
 - `Change Log` --references--> `test_mcp_stdio_invalid_tool_is_tool_error()`  [INFERRED]
   documents/initial-plan/tracking.md → server/tests/test_mcp_stdio.py
-- `agent-hq` --depends_on--> `agent-hq-server`  [EXTRACTED]
-  cli/pyproject.toml → server/pyproject.toml
-- `assemble_bundle()` --uses--> `ProfileItem`  [INFERRED]
-  server/src/agent_hq_server/catalog/bundle.py → server/src/agent_hq_server/catalog/catalog.py
-- `_get_skill_files()` --uses--> `Skill`  [INFERRED]
-  server/src/agent_hq_server/catalog/bundle.py → server/src/agent_hq_server/catalog/catalog.py
-- `_role_summary()` --uses--> `Role`  [INFERRED]
-  server/src/agent_hq_server/tools/bootstrap.py → server/src/agent_hq_server/catalog/catalog.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (45 total, 9 thin omitted)
+## Communities (39 total, 7 thin omitted)
 
-### Community 0 - "ContentBase"
-Cohesion: 0.10
-Nodes (6): ContentBase, InstructionFrontmatter, RoleFrontmatter, SkillFrontmatter, Phase, WorkflowFrontmatter
+### Community 0 - "schema/__init__.py"
+Cohesion: 0.05
+Nodes (36): _add(), _glob_of(), _resolve_instructions(), _resolve_roles(), _resolve_skills(), _resolve_workflow(), _role_summary(), _skill_files() (+28 more)
 
-### Community 1 - "schema/__init__.py"
-Cohesion: 0.09
-Nodes (23): InstructionSummary, ChecklistView, ContentInfoView, Counts, ErrorView, InstructionViewFull, RoleView, SkillView (+15 more)
+### Community 1 - "ErrorView"
+Cohesion: 0.06
+Nodes (29): InstructionSummary, SkillSummary, ChecklistView, ContentInfoView, Counts, ErrorView, InstructionViewFull, RoleView (+21 more)
 
 ### Community 2 - "test_util.py"
 Cohesion: 0.12
 Nodes (10): content_digest(), slug_from_dir(), slug_from_filename(), _slugify(), test_digest_changes_with_content(), test_digest_missing_dir(), test_slug_from_dir_uses_skill_directory(), test_slug_from_filename_explicit_suffix() (+2 more)
 
 ### Community 3 - "registry.py"
-Cohesion: 0.07
-Nodes (12): main(), _repo_root(), build(), Config, default_content_path(), default_project_path(), _expand(), resolve_project_path() (+4 more)
+Cohesion: 0.06
+Nodes (25): main(), _repo_root(), build(), Config, default_content_path(), default_project_path(), _expand(), resolve_project_path() (+17 more)
 
 ### Community 4 - "pathlib"
 Cohesion: 0.06
@@ -112,10 +106,6 @@ Nodes (23): parse_markdown(), parse_yaml_file(), ParsedDoc, _strip(), read_pin_f
 ### Community 5 - "5. Detailed Implementation Plan (phases → tasks → acceptance)"
 Cohesion: 0.05
 Nodes (35): 1. Overview, 2. Goals / Non-Goals, 3. How Consistency Works (Bootstrap Handshake), 4. Architecture, 5. Detailed Implementation Plan (phases → tasks → acceptance), 6. Validation Strategy (summary), 7. Decisions (all resolved 2026-09-24), 8. v2 Ideas (parked, not planned) (+27 more)
-
-### Community 6 - "matcher.py"
-Cohesion: 0.15
-Nodes (7): BundleMatchInput, _rule_matches(), _score(), Defaults, FileMatch, Matches, Profile
 
 ### Community 7 - "Accessibility Expert"
 Cohesion: 0.06
@@ -126,16 +116,12 @@ Cohesion: 0.08
 Nodes (25): 1. Gather Required Information, 2. Determine ADR Number, 3. Generate ADR Document in Markdown, ADR Generator Agent, Agent Success Criteria, [Alternative Name], Alternatives Considered, Consequences (+17 more)
 
 ### Community 9 - "test_mcp_stdio.py"
-Cohesion: 0.13
+Cohesion: 0.14
 Nodes (7): _call(), _Client, _now(), project_dir(), _spawn(), test_mcp_stdio_full_roundtrip(), test_mcp_stdio_invalid_tool_is_tool_error()
 
 ### Community 10 - "Agent HQ — Technical Design"
 Cohesion: 0.09
 Nodes (23): 1.1 The problem, 1.2 What Agent HQ adds, 1. Problem & Value, 2.1 Components & dependency rules, 2.2 Repository layout (monorepo, decision D3 · Python per D1), 2. Architecture, 3.1 Bootstrap handshake (session start), 3.2 On-demand retrieval (during work) (+15 more)
-
-### Community 12 - "create_server"
-Cohesion: 0.22
-Nodes (14): create_server(), bootstrap(), content_info(), get_checklist(), get_instruction(), get_role(), get_skill(), get_workflow() (+6 more)
 
 ### Community 13 - "Development Standards"
 Cohesion: 0.11
@@ -214,44 +200,36 @@ Cohesion: 0.50
 Nodes (3): Agent HQ, Development, Status
 
 ### Community 38 - "Catalog"
-Cohesion: 0.09
-Nodes (27): assemble_bundle(), _get_skill_files(), _resolve_instructions(), _resolve_roles(), _resolve_skills(), _resolve_workflow(), Catalog, Bundle (+19 more)
-
-### Community 39 - "pick_profile"
-Cohesion: 0.17
-Nodes (12): _any_glob_matches(), match_instructions(), pick_profile(), test_auto_match_on_file_presence(), test_auto_match_on_manifest_signals(), test_instruction_matching_by_globs(), test_no_profiles_raises(), test_no_signals_fall_back_to_default() (+4 more)
+Cohesion: 0.12
+Nodes (26): Phase 3 — Profiles & matching ✅, assemble_bundle(), Catalog, detect_stack(), Bundle, bootstrap(), _project_file_patterns(), _assert_bundle() (+18 more)
 
 ### Community 40 - "load"
-Cohesion: 0.21
-Nodes (10): load(), test_astro_comma_globs_normalized(), test_counts_helper(), test_digest_stable_and_sensitive(), test_duplicate_slug_across_directories_flagged(), test_fixture_tree_loads_fast(), test_fixture_tree_loads_with_zero_rework(), test_malformed_file_becomes_issue_not_crash() (+2 more)
-
-### Community 41 - "catalog.py"
-Cohesion: 0.33
-Nodes (8): _append(), _build_item(), Instruction, _kind_for(), ProfileItem, Role, Skill, Workflow
+Cohesion: 0.09
+Nodes (22): _flatten(), load(), pick_profile(), test_astro_comma_globs_normalized(), test_counts_helper(), test_digest_stable_and_sensitive(), test_duplicate_slug_across_directories_flagged(), test_fixture_tree_loads_fast() (+14 more)
 
 ### Community 43 - "Framework-Specific: Vue (VU1-VU3)"
 Cohesion: 0.50
 Nodes (4): Framework-Specific: Vue (VU1-VU3), VU1: `@click` on Non-Interactive Element Without Role and Keyboard, VU2: `v-if` Toggle Without Focus Management, VU3: `v-html` Injecting Content Without Accessible Structure
 
 ## Knowledge Gaps
-- **216 isolated node(s):** `agent-hq`, `agent-hq-workspace`, `agent-hq-server`, `graphify`, `0. At the start of every session: read `context.txt`` (+211 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 381 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **215 isolated node(s):** `agent-hq`, `agent-hq-workspace`, `agent-hq-server`, `graphify`, `0. At the start of every session: read `context.txt`` (+210 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 377 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **7 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `test_mcp_stdio_invalid_tool_is_tool_error()` connect `test_mcp_stdio.py` to `5. Detailed Implementation Plan (phases → tasks → acceptance)`?**
-  _High betweenness centrality (0.102) - this node is a cross-community bridge._
-- **Are the 22 inferred relationships involving `Catalog` (e.g. with `assemble_bundle()` and `_resolve_instructions()`) actually correct?**
-  _`Catalog` has 22 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `Change Log` connect `5. Detailed Implementation Plan (phases → tasks → acceptance)` to `load`, `test_mcp_stdio.py`, `Catalog`?**
+  _High betweenness centrality (0.089) - this node is a cross-community bridge._
+- **Are the 26 inferred relationships involving `Catalog` (e.g. with `assemble_bundle()` and `_resolve_instructions()`) actually correct?**
+  _`Catalog` has 26 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `agent-hq`, `agent-hq-workspace`, `agent-hq-server` to the rest of the system?**
-  _216 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `ContentBase` be split into smaller, more focused modules?**
-  _Cohesion score 0.0960591133004926 - nodes in this community are weakly interconnected._
-- **Why does `Change Log` connect `5. Detailed Implementation Plan (phases → tasks → acceptance)` to `test_mcp_stdio.py`?**
-  _High betweenness centrality (0.100) - this node is a cross-community bridge._
+  _215 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `schema/__init__.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.08758503401360544 - nodes in this community are weakly interconnected._
-- **Should `test_util.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.12318840579710146 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05329153605015674 - nodes in this community are weakly interconnected._
+- **Why does `Catalog` connect `Catalog` to `schema/__init__.py`, `ErrorView`, `load`, `pathlib`?**
+  _High betweenness centrality (0.047) - this node is a cross-community bridge._
+- **Are the 4 inferred relationships involving `assemble_bundle()` (e.g. with `Change Log` and `Phase 3 — Profiles & matching ✅`) actually correct?**
+  _`assemble_bundle()` has 4 INFERRED edges - model-reasoned connections that need verification._
+- **Should `ErrorView` be split into smaller, more focused modules?**
+  _Cohesion score 0.06253652834599649 - nodes in this community are weakly interconnected._

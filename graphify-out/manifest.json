@@ -54,9 +54,9 @@
     "semantic_hash": ""
   },
   "server/src/agent_hq_server/catalog/__init__.py": {
-    "mtime": 1791222601.4475346,
-    "seen": 1791223144.01187,
-    "ast_hash": "780fd0b98ba1ddc5264d962d8c82a4fc",
+    "mtime": 1791243338.5459163,
+    "seen": 1791244929.1155121,
+    "ast_hash": "bcf0fe45f8d3f682b94eb027f5007272",
     "semantic_hash": ""
   },
   "server/src/agent_hq_server/catalog/catalog.py": {
@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "server/src/agent_hq_server/tools/bootstrap.py": {
-    "mtime": 1791218889.0781868,
-    "seen": 1791223144.0118809,
-    "ast_hash": "9bbb44d1808f03d2861cd82a25f2c2c4",
+    "mtime": 1791243606.6204946,
+    "seen": 1791244929.115524,
+    "ast_hash": "359e2d182041b9bead6b0ac1905867c5",
     "semantic_hash": ""
   },
   "server/src/agent_hq_server/tools/content_info.py": {
@@ -246,9 +246,9 @@
     "semantic_hash": ""
   },
   "server/tests/test_mcp_stdio.py": {
-    "mtime": 1791222802.014221,
-    "seen": 1791223144.011891,
-    "ast_hash": "3c725b9b88ed1743efc34f546ae1ed23",
+    "mtime": 1791243844.8442857,
+    "seen": 1791244929.115535,
+    "ast_hash": "0dd410fc41626b292a0934987ba46521",
     "semantic_hash": ""
   },
   "server/tests/test_scaffold.py": {
@@ -294,9 +294,9 @@
     "semantic_hash": ""
   },
   "context.txt": {
-    "mtime": 1791223108.5849714,
-    "seen": 1791223144.011897,
-    "ast_hash": "084b7e5334a8ffdf44bd98f34b13ab56",
+    "mtime": 1791244800.388797,
+    "seen": 1791244929.1155431,
+    "ast_hash": "4c6bfa02f03257d8e75a889d246cd21c",
     "semantic_hash": ""
   },
   "documents/initial-plan/plan.md": {
@@ -312,9 +312,9 @@
     "semantic_hash": ""
   },
   "documents/initial-plan/tracking.md": {
-    "mtime": 1791222954.0296543,
-    "seen": 1791223144.011899,
-    "ast_hash": "e543d64798c0249d947a2d2f5fd20222",
+    "mtime": 1791244739.6516955,
+    "seen": 1791244929.115545,
+    "ast_hash": "ba11ae869636c8610483f556bd15c03e",
     "semantic_hash": ""
   },
   "server/tests/fixtures/content/agents/accessibility.agent.md": {
@@ -378,15 +378,15 @@
     "semantic_hash": ""
   },
   "server/src/agent_hq_server/catalog/bundle.py": {
-    "mtime": 1791222601.4741766,
-    "seen": 1791223144.0118709,
-    "ast_hash": "83bb41f1f71aa30e1fc87c576173bf17",
+    "mtime": 1791244552.5807095,
+    "seen": 1791244929.115513,
+    "ast_hash": "978a47f52b23a5e97a9b7da5fca571d3",
     "semantic_hash": ""
   },
   "server/src/agent_hq_server/catalog/detect.py": {
-    "mtime": 1791222593.1299682,
-    "seen": 1791223144.011872,
-    "ast_hash": "260b37ee92a6fdef674c55019b368bb1",
+    "mtime": 1791243338.5446296,
+    "seen": 1791244929.115514,
+    "ast_hash": "cd93fb48f1028987cf6e00f50ead2c18",
     "semantic_hash": ""
   },
   "content/profiles/node-web.profile.yaml": {
@@ -399,6 +399,18 @@
     "mtime": 1791218889.0661833,
     "seen": 1791223144.0118961,
     "ast_hash": "ce07ab4bac6c813b4bf6e4fff1033294",
+    "semantic_hash": ""
+  },
+  "server/tests/test_bundle.py": {
+    "mtime": 1791244612.3170369,
+    "seen": 1791244929.115533,
+    "ast_hash": "d6a35680c7e7c410a71b32e63bc8b441",
+    "semantic_hash": ""
+  },
+  "content/profiles/default.profile.yaml": {
+    "mtime": 1791243338.5446823,
+    "seen": 1791244929.115541,
+    "ast_hash": "5b679a6f170455e3d789d7756daa72f9",
     "semantic_hash": ""
   }
 }

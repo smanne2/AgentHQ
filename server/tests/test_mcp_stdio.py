@@ -102,7 +102,7 @@ def _now() -> float:
 @pytest.fixture()
 def project_dir(tmp_path: Path) -> Path:
     project = tmp_path / "demo-project"
-    project.mkdir()
+    (project / "src").mkdir(parents=True)
     (project / "README.md").write_text("# demo\n", encoding="utf-8")
     return project
 
@@ -178,7 +178,9 @@ def test_mcp_stdio_full_roundtrip(project_dir: Path) -> None:
             "review",
             "ship",
         ]
-        assert bundle["instructions"][0]["slug"] == "agent-safety"
+        # The profile (default) inlines its listed instructions; the catalog
+        # holds more (a11y, astro) — those surface via list/get tools.
+        assert {i["slug"] for i in bundle["instructions"]} == {"agent-safety"}
         assert "Start phase 'discover'" in bundle["next_action"]
 
         roles = _call(client, "agent_hq.list_roles")["structuredContent"]["roles"]

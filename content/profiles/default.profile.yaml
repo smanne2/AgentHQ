@@ -1,0 +1,10 @@
+id: default
+name: Default
+description: Generic fallback profile for projects whose stack cannot be detected.
+matches: null
+stack: []
+defaults:
+  workflow: standard-feature
+  roles: []
+  instructions: [agent-safety]
+  skills: [acquire-codebase-knowledge]

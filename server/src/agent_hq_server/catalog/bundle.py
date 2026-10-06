@@ -1,17 +1,19 @@
 """Onboarding bundle assembly.
 
-Builds the bootstrap response from a profile and catalog.
+Builds the bootstrap response from a selected profile and the catalog
+(technical.md §4.5). Instructions are inlined in full (needed immediately);
+roles and skills travel as summaries (G5).
 """
 
 from __future__ import annotations
 
-from pathlib import Path
+from collections.abc import Sequence
 
-from agent_hq_server.catalog.catalog import Catalog, ProfileItem, Skill
+from agent_hq_server.catalog.catalog import Catalog, Instruction, ProfileItem, Role, Skill, Workflow
+from agent_hq_server.catalog.matcher import ProfileSource, match_instructions
 from agent_hq_server.schema import (
     Bundle,
     BundleProfile,
-    ErrorView,
     InstructionView,
     PhaseView,
     RoleSummary,
@@ -23,23 +25,25 @@ from agent_hq_server.schema import (
 def assemble_bundle(
     catalog: Catalog,
     profile: ProfileItem,
-    project_path: Path,
-) -> Bundle | ErrorView:
-    """Assemble an onboarding bundle from a profile and catalog.
+    source: ProfileSource,
+    file_patterns: Sequence[str],
+    warnings: list[str],
+) -> Bundle:
+    """Assemble the onboarding bundle for a selected profile.
 
-    The bundle contains workflow, instructions, roles, and skills needed
-    for the project. Instructions are included in full (needed immediately),
-    while roles and skills are returned as summaries (lightweight).
+    ``source`` is how the profile was chosen (pinned/auto/fallback).
+    ``file_patterns`` are the project's relative file paths, used to evaluate
+    the ``applyTo`` globs of profile-requested instructions. Global rules
+    (no ``applyTo``) are always inlined.
     """
     defaults = profile.frontmatter.defaults
 
-    workflow = _resolve_workflow(catalog, defaults.workflow)
-    instructions = _resolve_instructions(catalog, defaults.instructions)
-    roles = _resolve_roles(catalog, defaults.roles)
-    skills = _resolve_skills(catalog, defaults.skills)
+    workflow = _resolve_workflow(catalog, defaults.workflow, warnings)
+    instructions = _resolve_instructions(catalog, defaults.instructions, file_patterns, warnings)
+    roles = _resolve_roles(catalog, defaults.roles, warnings)
+    skills = _resolve_skills(catalog, defaults.skills, warnings)
 
     first_phase = workflow.phases[0] if workflow and workflow.phases else None
-    next_action = ""
     if first_phase and workflow:
         next_action = (
             f"Start phase '{first_phase.id}' ({first_phase.title}) of workflow "
@@ -53,7 +57,7 @@ def assemble_bundle(
         profile=BundleProfile(
             id=profile.frontmatter.id,
             name=profile.frontmatter.name,
-            source="pinned",  # Caller should set this based on how profile was selected
+            source=source,
         ),
         workflow=workflow,
         instructions=instructions,
@@ -63,122 +67,108 @@ def assemble_bundle(
     )
 
 
-def _resolve_workflow(catalog: Catalog, slug: str | None) -> WorkflowView | None:
-    """Resolve a workflow by slug."""
+def _resolve_workflow(
+    catalog: Catalog, slug: str | None, warnings: list[str]
+) -> WorkflowView | None:
     if not slug:
         return None
-
-    for item in catalog.workflows:
-        if item.slug == slug:
-            fm = item.frontmatter
-            return WorkflowView(
-                slug=item.slug,
-                name=fm.name,
-                description=fm.description,
-                phases=[
-                    PhaseView(
-                        id=p.id,
-                        title=p.display_title,
-                        checklist=list(p.checklist) if p.checklist else [],
-                        gate=p.gate,
-                    )
-                    for p in fm.phases or []
-                ],
+    found = catalog.find("workflow", slug)
+    if not isinstance(found, Workflow):
+        warnings.append(f"profile references unknown workflow '{slug}'")
+        return None
+    fm = found.frontmatter
+    return WorkflowView(
+        slug=found.slug,
+        name=fm.name,
+        description=fm.description,
+        phases=[
+            PhaseView(
+                id=p.id,
+                title=p.display_title,
+                checklist=list(p.checklist) if p.checklist else [],
+                gate=p.gate,
             )
-    return None
+            for p in fm.phases or []
+        ],
+    )
 
 
-def _resolve_instructions(catalog: Catalog, slugs: list[str] | None) -> list[InstructionView]:
-    """Resolve instructions by slug, including global instructions."""
+def _resolve_instructions(
+    catalog: Catalog,
+    slugs: list[str],
+    file_patterns: Sequence[str],
+    warnings: list[str],
+) -> list[InstructionView]:
+    by_slug = {item.slug: item for item in catalog.instructions}
     picked: dict[str, InstructionView] = {}
 
-    # First add all global instructions (no applyTo)
+    # Profile-requested instructions: slug must exist, and any applyTo glob
+    # must match at least one project file.
+    for slug in slugs:
+        item = by_slug.get(slug)
+        if item is None:
+            warnings.append(f"profile references unknown instruction '{slug}'")
+            continue
+        if item.frontmatter.apply_to and item.slug not in (
+            m.slug for m in match_instructions([item], list(file_patterns))
+        ):
+            warnings.append(
+                f"instruction '{slug}' applies to {_glob_of(item)} — no project file matched"
+            )
+            continue
+        _add(picked, item)
+
+    # Global rules (no applyTo) always apply, whatever the profile lists.
     for item in catalog.instructions:
         if item.frontmatter.apply_to is None:
-            picked[item.slug] = InstructionView(
-                slug=item.slug,
-                description=item.frontmatter.description,
-                body=item.body,
-            )
-
-    # Then add requested instructions
-    if slugs:
-        for slug in slugs:
-            for item in catalog.instructions:
-                if item.slug == slug:
-                    picked[item.slug] = InstructionView(
-                        slug=item.slug,
-                        description=item.frontmatter.description,
-                        body=item.body,
-                    )
-                    break
-
+            _add(picked, item)
     return list(picked.values())
 
 
-def _resolve_roles(catalog: Catalog, slugs: list[str] | None) -> list[RoleSummary]:
-    """Resolve roles by slug, or all roles if no slugs specified."""
-    if not slugs:
-        return [
-            RoleSummary(
-                slug=r.slug,
-                name=r.frontmatter.name,
-                description=r.frontmatter.description,
-            )
-            for r in catalog.roles
-        ]
+def _add(picked: dict[str, InstructionView], item: Instruction) -> None:
+    if item.slug not in picked:
+        picked[item.slug] = InstructionView(
+            slug=item.slug, description=item.frontmatter.description, body=item.body
+        )
 
-    picked: list[RoleSummary] = []
-    for slug in slugs:
-        for item in catalog.roles:
-            if item.slug == slug:
-                picked.append(
-                    RoleSummary(
-                        slug=item.slug,
-                        name=item.frontmatter.name,
-                        description=item.frontmatter.description,
-                    )
-                )
-                break
+
+def _glob_of(item: Instruction) -> str:
+    return ", ".join(item.frontmatter.apply_to or [])
+
+
+def _role_summary(role: Role) -> RoleSummary:
+    return RoleSummary(
+        slug=role.slug, name=role.frontmatter.name, description=role.frontmatter.description
+    )
+
+
+def _resolve_roles(catalog: Catalog, slugs: list[str], warnings: list[str]) -> list[RoleSummary]:
+    if not slugs:
+        return [_role_summary(r) for r in catalog.roles]
+    by_slug = {item.slug: item for item in catalog.roles}
+    picked = [_role_summary(by_slug[slug]) for slug in slugs if (by_slug.get(slug)) is not None]
+    unknown = [s for s in slugs if s not in by_slug]
+    warnings.extend(f"profile references unknown role '{s}'" for s in unknown)
     return picked
 
 
-def _resolve_skills(catalog: Catalog, slugs: list[str] | None) -> list[SkillSummary]:
-    """Resolve skills by slug, or all skills if no slugs specified."""
-    if not slugs:
-        return [
-            SkillSummary(
-                slug=s.slug,
-                description=s.frontmatter.description,
-                files=_get_skill_files(s),
-            )
-            for s in catalog.skills
-        ]
-
-    picked: list[SkillSummary] = []
-    for slug in slugs:
-        for item in catalog.skills:
-            if item.slug == slug:
-                picked.append(
-                    SkillSummary(
-                        slug=item.slug,
-                        description=item.frontmatter.description,
-                        files=_get_skill_files(item),
-                    )
-                )
-                break
+def _resolve_skills(catalog: Catalog, slugs: list[str], warnings: list[str]) -> list[SkillSummary]:
+    by_slug = {item.slug: item for item in catalog.skills}
+    picked = [
+        SkillSummary(slug=s.slug, description=s.frontmatter.description, files=_skill_files(s))
+        for slug in slugs
+        if (s := by_slug.get(slug)) is not None
+    ]
+    unknown = [s for s in slugs if s not in by_slug]
+    warnings.extend(f"profile references unknown skill '{s}'" for s in unknown)
     return picked
 
 
-def _get_skill_files(skill: Skill) -> list[str]:
-    """Get file manifest for a skill."""
-    files: list[str] = []
-    skill_dir = skill.path.parent
-
-    # List sibling files (scripts/, references/, etc.)
-    if skill_dir.is_dir():
-        for child in sorted(skill_dir.iterdir()):
-            if child.is_file():
-                files.append(child.name)
-
-    return files
+def _skill_files(skill: Skill) -> list[str]:
+    """Relative paths of every sibling file under the skill directory."""
+    root = skill.path.parent
+    return [
+        str(path.relative_to(root))
+        for path in sorted(root.rglob("*"))
+        if path.is_file() and path != skill.path
+    ]

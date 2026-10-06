@@ -2,7 +2,7 @@
 
 > Simple status board: what is implemented, what is pending.
 > Companion docs: [plan.md](./plan.md) (detailed phases/tasks) · [technical.md](./technical.md) (design)
-> **Last updated:** 2026-10-05
+> **Last updated:** 2026-10-05 (Phase 3 complete)
 
 ## Status Legend
 
@@ -16,7 +16,7 @@
 
 ## Overall
 
-✅ Plan approved 2026-09-24. **Phases 0–2 complete** (scaffold, content core, and MCP server over stdio). **Phase 3 in progress** (tasks 3.1–3.2 done: `detect.py` + `bundle.py`; 3.3 partial: 2 of 3 profiles shipped; 3.4 wiring + 3.5 tests outstanding). All gates green again as of 2026-10-05 (ruff · pyright · pytest 48 ✓ · check_lines) after a gate-repair pass.
+✅ Plan approved 2026-09-24. **Phases 0–3 complete** (scaffold, content core, MCP server over stdio, and profile-aware matching + bundle assembly). All gates green: ruff · pyright · pytest 60 ✓ · check_lines. **Phase 4 (client artifacts + CLI) is next.**
 
 Docs: `documents/initial-plan/`. Scope note: the ≤ 300-line rule applies to **source files only** — plan/design documents are exempt.
 
@@ -27,7 +27,7 @@ Docs: `documents/initial-plan/`. Scope note: the ≤ 300-line rule applies to **
 | 0 | Scaffold | ✅ Done | Python/uv workspace, ruff/pyright/pytest/CI, check_lines guard |
 | 1 | Content core | ✅ Done | Pydantic schemas + catalog engine; real awesome-copilot fixtures import clean |
 | 2 | MCP server (9 tools) | ✅ Done | stdio via official SDK; config + transport + registry + bootstrapping + typed list/get tools |
-| 3 | Profiles & matching | 🚧 In progress | 3.1 `detect.py` ✓ · 3.2 `bundle.py` ✓ · 3.3 profiles 2/3 (default missing) · 3.4 wire bootstrap → detect+bundle ✗ · 3.5 tests ✗ |
+| 3 | Profiles & matching | ✅ Done | detect → pick_profile (auto) → assemble_bundle wired into bootstrap; 3 profiles; 12 Phase-3 tests; node/python/fallback/pinned all verified |
 | 4 | Client artifacts + CLI | ⬜ Not started | AGENTS.md stub, mcp.json, `agent-hq init/doctor/validate` |
 | 5 | Seed content | ⬜ Not started | ~10 roles, ~6 instructions, 4 workflows, 3 conventions, 3–5 skills |
 | 6 | Process enforcement (state) | ⬜ Not started | Deferrable — v1 works without it |
@@ -72,12 +72,12 @@ Docs: `documents/initial-plan/`. Scope note: the ≤ 300-line rule applies to **
 - [x] `server/src/agent_hq_server/__main__.py` wiring
 - [x] MCP smoke validation with the actual FastMCP SDK surface (`tools/list`, tool registration, and JSON-safe return handling)
 
-### Phase 3 — Profiles & matching 🚧
-- [x] `server/src/agent_hq_server/catalog/detect.py` (stack detection — manifest signals → stack tag)
-- [x] `server/src/agent_hq_server/catalog/bundle.py` (onboarding bundle assembly)
-- [ ] `content/profiles/` — `node-web` ✓, `python-oss` ✓, `default` ✗ (only fixture `server/tests/fixtures/content/profiles/default.profile.yaml` exists)
-- [ ] Wire `bootstrap` to detect + bundle (task 3.4 — bootstrap.py still resolves inline; `bundle.py`/`detect.py` are exported but not yet called from the tool path)
-- [ ] Tests: different stacks → different bundles; pinned overrides auto (task 3.5 — no tests cover detect.py/bundle.py yet)
+### Phase 3 — Profiles & matching ✅
+- [x] `server/src/agent_hq_server/catalog/detect.py` (stack detection — manifest signals → profile scoring)
+- [x] `server/src/agent_hq_server/catalog/bundle.py` (onboarding bundle assembly; applyTo globs evaluated against real project files; warnings for unknown slugs / non-matching instructions)
+- [x] `content/profiles/` — `node-web`, `python-oss`, `default` (mirrored in fixtures)
+- [x] Wire `bootstrap` to detect + bundle (task 3.4 — pin file > explicit arg > `detect_stack` signals → `pick_profile` → `assemble_bundle`; inline phase-2 resolution removed)
+- [x] Tests: different stacks → different bundles; pinned overrides auto; fallback when undetectable (task 3.5 — `server/tests/test_bundle.py`, 12 tests incl. glob matching + vendor-dir pruning)
 
 ### Phase 4 — Client artifacts + CLI
 - [ ] `client/templates/AGENTS.md` (bootstrap stub, final wording)
@@ -111,6 +111,7 @@ Docs: `documents/initial-plan/`. Scope note: the ≤ 300-line rule applies to **
 
 | Date | Change |
 |---|---|
+| 2026-10-05 | **Phase 3 complete.** Wired `bootstrap` to the Phase-3 pipeline (task 3.4): `detect_stack` manifest signals → `pick_profile` auto-match → `assemble_bundle` (rewritten: `source` param, warnings for unknown slugs, applyTo globs evaluated against a pruned scan of the project's file paths). Added `content/profiles/default.profile.yaml` (3.3) and `server/tests/test_bundle.py` — 12 tests: node vs python → different bundles, undetectable → fallback, pin file / explicit arg override detection, glob instructions require matching project files, vendor-dir pruning, ErrorView when no profiles (3.5). Removed dead `detect_stack_from_signals` + unused `BundleMatchInput`. All gates green (pytest 60). |
 | 2026-10-05 | **Gate repair + tracking catch-up.** Phase 3 tasks 3.1–3.2 landed at checkpoint `908b5ad` (`detect.py`, `bundle.py`, 2 profiles in `content/profiles/`) without wiring or tests — 3.4/3.5 still open. Repaired red gates from that checkpoint: ruff lint/format (unsorted imports, F401, E501, SIM105), 2 pyright errors in `test_mcp_stdio.py` reader, and a stale SDK assertion (mcp 1.30+ returns a tool-level `isError` result for unknown tools, not a JSON-RPC error — test renamed to `test_mcp_stdio_invalid_tool_is_tool_error`). All gates green; pyright run via `uvx pyright` (no node in this sandbox; CI keeps `npx -y pyright`). |
 | 2026-09-26 | **Phase 2 complete.** Implemented the stdio MCP server, registry, bootstrap tool, typed content/list/get tools, and config wiring. Revalidated with `ruff`, `pyright`, pytest, and the project guard script — all green. |
 | 2026-09-24 | **Phases 0–1 complete.** Scaffold: uv workspace, ruff + pyright + pytest + CI, `check_lines` guard. Content core: pydantic schemas (all 6 kinds), frontmatter parser, catalog indexer + digest, profile/glob matcher, passing tests on real awesome-copilot fixtures. All gates green |
