@@ -18,8 +18,10 @@ defaults:
   instructions:
     - git-hygiene
     - agent-safety
-    - python-conventions
+    - python
     - doc-updates
   skills:
     - acquire-codebase-knowledge
     - adr-writer
+    - test-plan
+    - pre-commit-check

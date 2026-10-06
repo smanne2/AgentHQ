@@ -23,7 +23,9 @@ defaults:
   instructions:
     - git-hygiene
     - agent-safety
-    - ts-conventions
+    - typescript
     - node-api
   skills:
     - acquire-codebase-knowledge
+    - test-plan
+    - pre-commit-check

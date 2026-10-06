@@ -6,5 +6,5 @@ stack: []
 defaults:
   workflow: standard-feature
   roles: []
-  instructions: [agent-safety]
-  skills: [acquire-codebase-knowledge]
+  instructions: [git-hygiene, agent-safety, testing-discipline]
+  skills: [acquire-codebase-knowledge, pre-commit-check]

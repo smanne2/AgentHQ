@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "agent-hq": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "run",
+        "--project",
+        "__AGENT_HQ_ROOT__",
+        "agent-hq-server"
+      ],
+      "env": {
+        "AGENT_HQ_CONTENT": "__AGENT_HQ_CONTENT__"
+      }
+    }
+  }
+}
