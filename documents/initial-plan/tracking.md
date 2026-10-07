@@ -96,11 +96,11 @@ Docs: `documents/initial-plan/`. Scope note: the ≤ 300-line rule applies to **
 - [x] `cli` — `agent-hq import <path>` (dry-run report)
 - [x] Profile→content mappings finalized (all profile slugs resolve; `validate` clean)
 
-### Phase 6 — Process enforcement (deferrable)
-- [ ] `server/src/agent_hq_server/state/store.py` (`~/.agent-hq/state/`, atomic JSON)
-- [ ] `server/src/agent_hq_server/state/gates.py` (manual / artifact / checklist-complete + ordering)
-- [ ] `server/src/agent_hq_server/tools/state.py` (`report_progress` / `get_progress`)
-- [ ] Gate pass/fail/skip tests incl. tamper case
+### Phase 6 — Process enforcement (deferrable) ✅
+- [x] `server/src/agent_hq_server/state/store.py` (`~/.agent-hq/state/`, atomic JSON)
+- [x] `server/src/agent_hq_server/state/gates.py` (manual / artifact / checklist-complete + ordering)
+- [x] `server/src/agent_hq_server/tools/state.py` (`report_progress` / `get_progress`)
+- [x] Tests: gate pass/fail/skip tests incl. tamper case
 
 ### Phase 7 — Validation & docs
 - [ ] CI e2e script (JSON-RPC over stdio: initialize → bootstrap → checklist → report)
