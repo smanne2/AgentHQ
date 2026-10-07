@@ -23,8 +23,13 @@ from agent_hq_server.tools import bootstrap as bootstrap_mod
 from agent_hq_server.tools import content_info as content_info_mod
 from agent_hq_server.tools import instructions as instructions_mod
 from agent_hq_server.tools import roles as roles_mod
+from agent_hq_server.tools import bootstrap as bootstrap_mod
+from agent_hq_server.tools import content_info as content_info_mod
+from agent_hq_server.tools import instructions as instructions_mod
+from agent_hq_server.tools import roles as roles_mod
 from agent_hq_server.tools import skills as skills_mod
 from agent_hq_server.tools import workflows as workflows_mod
+from agent_hq_server.tools import state as state_mod
 
 log = logging.getLogger(__name__)
 
@@ -124,6 +129,32 @@ def create_server(config: Config) -> FastMCP:
     ) -> dict[str, Any]:
         """Checklist for one workflow phase + its gate + what follows it."""
         return _dump(workflows_mod.get_checklist(catalog, workflowSlug, phaseId))
+
+    @mcp.tool(name="agent_hq.report_progress")
+    def report_progress(
+        projectPath: Annotated[str | None, Field(alias="projectPath")] = None,
+        workflowSlug: Annotated[str, Field(alias="workflowSlug")],
+        phaseId: Annotated[str, Field(alias="phaseId")],
+        completed: Annotated[list[int], Field(description="indices of completed checklist items")],
+        evidence: Annotated[str | None, Field(alias="evidence")] = None,
+        approved: Annotated[bool, Field(description="True if user approved manual gate")] = False,
+    ) -> dict[str, Any]:
+        """Report completion of a phase. Returns status and next phase."""
+        path = Path(projectPath).expanduser().resolve() if projectPath else None
+        result = state_mod.report_progress(
+            catalog, path, workflowSlug, phaseId, completed, evidence, approved
+        )
+        return _dump(result)
+
+    @mcp.tool(name="agent_hq.get_progress")
+    def get_progress(
+        projectPath: Annotated[str | None, Field(alias="projectPath")] = None,
+        workflowSlug: Annotated[str | None, Field(alias="workflowSlug")] = None,
+    ) -> dict[str, Any]:
+        """Return the current progress board for the project workflow."""
+        path = Path(projectPath).expanduser().resolve() if projectPath else None
+        result = state_mod.get_progress(path, workflowSlug)
+        return _dump(result)
 
     return mcp
 

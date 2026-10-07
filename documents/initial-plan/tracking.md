@@ -16,7 +16,7 @@
 
 ## Overall
 
-✅ Plan approved 2026-09-24. **Phases 0–5 complete** (scaffold, content core, MCP server, profile-aware matching + bundle, client artifacts + CLI, and the seeded content tree). **Phase 6 (process enforcement/state) is in progress**, then Phase 7 (validation & docs). Gates green: ruff · pyright · pytest · check_lines.
+✅ Plan approved 2026-09-24. **Phases 0–6 complete** (scaffold, content core, MCP server, profile-aware matching + bundle, client artifacts + CLI, seeded content tree, and process enforcement). **Phase 7 (validation & docs) is next**. Gates green: ruff · pyright · pytest · check_lines.
 
 Docs: `documents/initial-plan/`. Scope note: the ≤ 300-line rule applies to **source files only** — plan/design documents are exempt.
 
@@ -30,7 +30,7 @@ Docs: `documents/initial-plan/`. Scope note: the ≤ 300-line rule applies to **
 | 3 | Profiles & matching | ✅ Done | detect → pick_profile (auto) → assemble_bundle wired into bootstrap; 3 profiles; 12 Phase-3 tests; node/python/fallback/pinned all verified |
 | 4 | Client artifacts + CLI | ✅ Done | Templates + `agent-hq init/doctor/validate/import`; init detects stack → writes 3 artifacts; doctor verified server-start + bundle |
 | 5 | Seed content | ✅ Done | 10 roles, 9 instructions (6 + 3 conventions), 4 workflows, 4 skills, 3 profiles; all refs resolve, `validate` clean |
-| 6 | Process enforcement (state) | 🚧 In progress | Deferrable — v1 works without it |
+| 6 | Process enforcement (state) | ✅ Done | State store, gate verification, report/get progress tools and tests complete |
 | 7 | Validation & docs | ⬜ Not started | E2E in CI, README/CONTRIBUTING, v1.0.0 tag |
 
 ## Open Decisions (awaiting approval)
