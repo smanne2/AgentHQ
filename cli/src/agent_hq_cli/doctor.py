@@ -35,6 +35,8 @@ def _check_server_starts(content: Path) -> tuple[bool, str]:
             text=True,
         )
         try:
+            if proc.stdin is None:
+                return False, "subprocess stdin is None"
             proc.stdin.write(
                 json.dumps(
                     {
@@ -50,8 +52,7 @@ def _check_server_starts(content: Path) -> tuple[bool, str]:
                 )
                 + "\n"
             )
-            if proc.stdin:
-                proc.stdin.flush()
+            proc.stdin.flush()
             line = proc.stdout.readline() if proc.stdout else None
             if not line:
                 return (
@@ -96,19 +97,27 @@ def run_doctor(project: Path | None, profile: str | None) -> int:
 
     # 2. bootstrap returns a non-empty bundle
     bundle = bootstrap(catalog, project, pinned_profile=profile)
-    if hasattr(bundle, "error") and bundle.error:
-        failures.append(f"bootstrap error: {bundle.error}")
-    elif not hasattr(bundle, "error"):
-        n_instr = len(bundle.instructions)
-        n_roles = len(bundle.roles)
-        n_skills = len(bundle.skills)
-        if n_instr + n_roles + n_skills == 0 and bundle.workflow is None:
-            failures.append("bundle is empty (no instructions, roles, skills, or workflow)")
-        print(
-            f"✓ bootstrap: profile={bundle.profile.id} ({bundle.profile.source}) "
-            f"workflow={bundle.workflow.slug if bundle.workflow else None} "
-            f"instructions={n_instr} roles={n_roles} skills={n_skills}"
-        )
+    if hasattr(bundle, "error"):
+        # Type narrowing that Pyright accepts for hasattr
+        from agent_hq_server.schema.view import ErrorView
+        if isinstance(bundle, ErrorView):
+            failures.append(f"bootstrap error: {bundle.error}")
+    else:
+        # Use type narrowing to satisfy Pyright
+        from agent_hq_server.schema.bundle import Bundle
+        if isinstance(bundle, Bundle):
+            n_instr = len(bundle.instructions)
+            n_roles = len(bundle.roles)
+            n_skills = len(bundle.skills)
+            if n_instr + n_roles + n_skills == 0 and bundle.workflow is None:
+                failures.append("bundle is empty (no instructions, roles, skills, or workflow)")
+            print(
+                f"✓ bootstrap: profile={bundle.profile.id} ({bundle.profile.source}) "
+                f"workflow={bundle.workflow.slug if bundle.workflow else None} "
+                f"instructions={n_instr} roles={n_roles} skills={n_skills}"
+            )
+        else:
+            failures.append("bootstrap returned an unexpected type")
 
     # 3. server starts (real stdio process)
     ok, detail = _check_server_starts(content)

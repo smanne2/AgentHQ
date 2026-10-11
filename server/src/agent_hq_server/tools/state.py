@@ -40,7 +40,8 @@ def report_progress(
 
     # 1. Load state
     state = store.load_state(path, workflow_slug)
-    phases = workflow.frontmatter.phases if hasattr(workflow.frontmatter, "phases") else []
+    from agent_hq_server.schema.workflow import WorkflowFrontmatter
+    phases = workflow.frontmatter.phases if isinstance(workflow.frontmatter, WorkflowFrontmatter) else []
 
     # 2. Verify ordering
     ordering_flags = gates.verify_ordering(state, phase_id, phases)
