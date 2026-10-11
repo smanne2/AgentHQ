@@ -32,11 +32,15 @@ def version() -> None:
 
 @app.command()
 def init(
-    dir: Path = typer.Argument(None, help="Project directory to scaffold (default: CWD)."),
+    dir: Path = typer.Argument(
+        None, help="Project directory to scaffold (default: CWD)."
+    ),
     profile: str = typer.Option(
         None, "--profile", "-p", help="Pin this profile id (default: detected)."
     ),
-    stack: str = typer.Option(None, "--stack", help="Override the detected stack label."),
+    stack: str = typer.Option(
+        None, "--stack", help="Override the detected stack label."
+    ),
     force: bool = typer.Option(False, "--force", help="Overwrite existing files."),
 ) -> None:
     """Write AGENTS.md, mcp.json, and .agent-hq/profile.yaml into a project."""
@@ -56,7 +60,9 @@ def init(
 
 @app.command()
 def doctor(
-    project: Path = typer.Option(None, "--project", help="Project to test (default: CWD)."),
+    project: Path = typer.Option(
+        None, "--project", help="Project to test (default: CWD)."
+    ),
     profile: str = typer.Option(None, "--profile", help="Force this profile id."),
 ) -> None:
     """Verify server starts, content loads, and a bundle is non-empty."""
@@ -65,7 +71,9 @@ def doctor(
 
 @app.command()
 def validate(
-    path: Path = typer.Argument(None, help="Content tree to check (default: repo content/)."),
+    path: Path = typer.Argument(
+        None, help="Content tree to check (default: repo content/)."
+    ),
 ) -> None:
     """Schema-check the whole content tree (contributor gate)."""
     raise typer.Exit(validate_cmd.run_validate(path))
@@ -79,7 +87,9 @@ def import_content(
     target: Path = typer.Argument(
         Path("content"), help="Content tree to import into (default: content/)."
     ),
-    copy: bool = typer.Option(False, "--copy", help="Actually copy (default: dry-run)."),
+    copy: bool = typer.Option(
+        False, "--copy", help="Actually copy (default: dry-run)."
+    ),
 ) -> None:
     """Bring community content files into the content tree (dry-run by default)."""
     raise typer.Exit(import_cmd.run_import(source, target, copy))

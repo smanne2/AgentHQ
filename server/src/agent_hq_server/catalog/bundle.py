@@ -9,7 +9,14 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from agent_hq_server.catalog.catalog import Catalog, Instruction, ProfileItem, Role, Skill, Workflow
+from agent_hq_server.catalog.catalog import (
+    Catalog,
+    Instruction,
+    ProfileItem,
+    Role,
+    Skill,
+    Workflow,
+)
 from agent_hq_server.catalog.matcher import ProfileSource, match_instructions
 from agent_hq_server.schema import (
     Bundle,
@@ -39,7 +46,9 @@ def assemble_bundle(
     defaults = profile.frontmatter.defaults
 
     workflow = _resolve_workflow(catalog, defaults.workflow, warnings)
-    instructions = _resolve_instructions(catalog, defaults.instructions, file_patterns, warnings)
+    instructions = _resolve_instructions(
+        catalog, defaults.instructions, file_patterns, warnings
+    )
     roles = _resolve_roles(catalog, defaults.roles, warnings)
     skills = _resolve_skills(catalog, defaults.skills, warnings)
 
@@ -138,24 +147,36 @@ def _glob_of(item: Instruction) -> str:
 
 def _role_summary(role: Role) -> RoleSummary:
     return RoleSummary(
-        slug=role.slug, name=role.frontmatter.name, description=role.frontmatter.description
+        slug=role.slug,
+        name=role.frontmatter.name,
+        description=role.frontmatter.description,
     )
 
 
-def _resolve_roles(catalog: Catalog, slugs: list[str], warnings: list[str]) -> list[RoleSummary]:
+def _resolve_roles(
+    catalog: Catalog, slugs: list[str], warnings: list[str]
+) -> list[RoleSummary]:
     if not slugs:
         return [_role_summary(r) for r in catalog.roles]
     by_slug = {item.slug: item for item in catalog.roles}
-    picked = [_role_summary(by_slug[slug]) for slug in slugs if (by_slug.get(slug)) is not None]
+    picked = [
+        _role_summary(by_slug[slug])
+        for slug in slugs
+        if (by_slug.get(slug)) is not None
+    ]
     unknown = [s for s in slugs if s not in by_slug]
     warnings.extend(f"profile references unknown role '{s}'" for s in unknown)
     return picked
 
 
-def _resolve_skills(catalog: Catalog, slugs: list[str], warnings: list[str]) -> list[SkillSummary]:
+def _resolve_skills(
+    catalog: Catalog, slugs: list[str], warnings: list[str]
+) -> list[SkillSummary]:
     by_slug = {item.slug: item for item in catalog.skills}
     picked = [
-        SkillSummary(slug=s.slug, description=s.frontmatter.description, files=_skill_files(s))
+        SkillSummary(
+            slug=s.slug, description=s.frontmatter.description, files=_skill_files(s)
+        )
         for slug in slugs
         if (s := by_slug.get(slug)) is not None
     ]

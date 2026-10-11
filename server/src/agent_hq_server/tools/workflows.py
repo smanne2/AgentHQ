@@ -22,7 +22,9 @@ def list_workflows(catalog: Catalog) -> list[WorkflowSummary]:
             slug=w.slug,
             name=w.frontmatter.name,
             description=w.frontmatter.description,
-            phases=[{"id": p.id, "title": p.display_title} for p in w.frontmatter.phases],
+            phases=[
+                {"id": p.id, "title": p.display_title} for p in w.frontmatter.phases
+            ],
         )
         for w in catalog.workflows
     ]
@@ -39,7 +41,9 @@ def get_workflow(
         return _phase_view(item, phase_id)
     fm = item.frontmatter
     extras = {
-        k: v for k, v in (fm.model_extra or {}).items() if k not in WorkflowViewFull.model_fields
+        k: v
+        for k, v in (fm.model_extra or {}).items()
+        if k not in WorkflowViewFull.model_fields
     }
     return WorkflowViewFull(
         slug=item.slug,
@@ -52,7 +56,9 @@ def get_workflow(
     )
 
 
-def get_checklist(catalog: Catalog, workflow_slug: str, phase_id: str) -> ChecklistView | ErrorView:
+def get_checklist(
+    catalog: Catalog, workflow_slug: str, phase_id: str
+) -> ChecklistView | ErrorView:
     """Public entry for the ``agent_hq.get_checklist`` tool."""
     item = catalog.find("workflow", workflow_slug)
     if not isinstance(item, Workflow):

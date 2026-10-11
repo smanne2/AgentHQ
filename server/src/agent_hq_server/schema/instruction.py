@@ -12,7 +12,9 @@ from agent_hq_server.schema.common import ContentBase
 
 
 class InstructionFrontmatter(ContentBase):
-    model_config = ConfigDict(extra="allow", protected_namespaces=(), populate_by_name=True)
+    model_config = ConfigDict(
+        extra="allow", protected_namespaces=(), populate_by_name=True
+    )
 
     # awesome-copilot spells the key `applyTo` (camelCase) in YAML:
     apply_to: list[str] | None = Field(default=None, alias="applyTo")

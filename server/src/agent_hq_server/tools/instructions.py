@@ -29,7 +29,9 @@ def list_instructions(
         selected = [i for i in selected if tag in (i.frontmatter.tags or [])]
     return [
         InstructionSummary(
-            slug=i.slug, description=i.frontmatter.description, apply_to=i.frontmatter.apply_to
+            slug=i.slug,
+            description=i.frontmatter.description,
+            apply_to=i.frontmatter.apply_to,
         )
         for i in selected
     ]
@@ -42,7 +44,9 @@ def get_instruction(catalog: Catalog, slug: str) -> InstructionViewFull | ErrorV
         return _unknown(slug, [i.slug for i in catalog.instructions])
     fm = item.frontmatter
     extras = {
-        k: v for k, v in (fm.model_extra or {}).items() if k not in InstructionViewFull.model_fields
+        k: v
+        for k, v in (fm.model_extra or {}).items()
+        if k not in InstructionViewFull.model_fields
     }
     return InstructionViewFull(
         slug=item.slug,

@@ -15,7 +15,9 @@ from agent_hq_server.schema.workflow import Gate
 log = logging.getLogger(__name__)
 
 
-def verify_ordering(state: dict[str, Any], phase_id: str, workflow_phases: list[Any]) -> list[str]:
+def verify_ordering(
+    state: dict[str, Any], phase_id: str, workflow_phases: list[Any]
+) -> list[str]:
     """
     Checks if all prior phases have been completed (gates passed).
     Returns a list of flags if deviations are found.

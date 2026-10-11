@@ -27,7 +27,9 @@ def _skill_files(skill: Skill) -> list[str]:
 def list_skills(catalog: Catalog) -> list[SkillSummary]:
     """G5: slugs + one-liners; ``files`` carries the (small) sibling manifest."""
     return [
-        SkillSummary(slug=s.slug, description=s.frontmatter.description, files=_skill_files(s))
+        SkillSummary(
+            slug=s.slug, description=s.frontmatter.description, files=_skill_files(s)
+        )
         for s in catalog.skills
     ]
 
@@ -38,7 +40,11 @@ def get_skill(catalog: Catalog, slug: str) -> SkillView | ErrorView:
     if not isinstance(item, Skill):
         return _unknown(slug, [s.slug for s in catalog.skills])
     fm = item.frontmatter
-    extras = {k: v for k, v in (fm.model_extra or {}).items() if k not in SkillView.model_fields}
+    extras = {
+        k: v
+        for k, v in (fm.model_extra or {}).items()
+        if k not in SkillView.model_fields
+    }
     return SkillView(
         slug=item.slug,
         name=fm.name,

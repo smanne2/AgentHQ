@@ -65,7 +65,9 @@ def init_project(target: Path, profile: str, stack: str, overwrite: bool) -> lis
     templates = templates_root()
     report: list[str] = []
 
-    agents_md = _render((templates / "AGENTS.md").read_text(encoding="utf-8"), placeholders)
+    agents_md = _render(
+        (templates / "AGENTS.md").read_text(encoding="utf-8"), placeholders
+    )
     report.append(_write(target / "AGENTS.md", agents_md, overwrite))
 
     mcp_cfg = json.loads((templates / "mcp.json").read_text(encoding="utf-8"))
@@ -75,7 +77,9 @@ def init_project(target: Path, profile: str, stack: str, overwrite: bool) -> lis
         values["agent_hq_root"],
         "agent-hq-server",
     ]
-    mcp_cfg["mcpServers"]["agent-hq"]["env"]["AGENT_HQ_CONTENT"] = values["content_path"]
+    mcp_cfg["mcpServers"]["agent-hq"]["env"]["AGENT_HQ_CONTENT"] = values[
+        "content_path"
+    ]
     report.append(
         _write(
             target / "mcp.json",
@@ -84,10 +88,14 @@ def init_project(target: Path, profile: str, stack: str, overwrite: bool) -> lis
         )
     )
 
-    profile_tmpl = (templates / ".agent-hq" / "profile.yaml").read_text(encoding="utf-8")
+    profile_tmpl = (templates / ".agent-hq" / "profile.yaml").read_text(
+        encoding="utf-8"
+    )
     report.append(
         _write(
-            target / ".agent-hq" / "profile.yaml", _render(profile_tmpl, placeholders), overwrite
+            target / ".agent-hq" / "profile.yaml",
+            _render(profile_tmpl, placeholders),
+            overwrite,
         )
     )
     return report

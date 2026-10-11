@@ -32,11 +32,17 @@ def report_progress(
     path = project_path or Path.cwd()
     workflow = catalog.find("workflow", workflow_slug)
     if not workflow:
-        return {"ok": False, "flags": [f"UNKNOWN_WORKFLOW:{workflow_slug}"], "nextPhase": None}
+        return {
+            "ok": False,
+            "flags": [f"UNKNOWN_WORKFLOW:{workflow_slug}"],
+            "nextPhase": None,
+        }
 
     # 1. Load state
     state = store.load_state(path, workflow_slug)
-    phases = workflow.frontmatter.phases if hasattr(workflow.frontmatter, "phases") else []
+    phases = (
+        workflow.frontmatter.phases if hasattr(workflow.frontmatter, "phases") else []
+    )
 
     # 2. Verify ordering
     ordering_flags = gates.verify_ordering(state, phase_id, phases)
@@ -77,7 +83,9 @@ def report_progress(
             next_phase = phases[i + 1].id
             break
 
-    flags = ordering_flags + ([] if gate_passed else [f"GATE_NOT_PASSED:{phase_obj.gate.kind}"])
+    flags = ordering_flags + (
+        [] if gate_passed else [f"GATE_NOT_PASSED:{phase_obj.gate.kind}"]
+    )
 
     return {
         "ok": len(flags) == 0,

@@ -19,7 +19,11 @@ from agent_hq_cli.config import content_root
 def _check_server_starts(content: Path) -> tuple[bool, str]:
     """Spawn the real stdio server and complete the MCP `initialize` handshake."""
     cmd = [sys.executable, "-m", "agent_hq_server"]
-    env = {"AGENT_HQ_CONTENT": str(content), "AGENT_HQ_LOG_LEVEL": "WARNING", **_safe_env()}
+    env = {
+        "AGENT_HQ_CONTENT": str(content),
+        "AGENT_HQ_LOG_LEVEL": "WARNING",
+        **_safe_env(),
+    }
     with tempfile.TemporaryDirectory() as proj:
         env["AGENT_HQ_PROJECT"] = proj
         proc = subprocess.Popen(
@@ -50,11 +54,17 @@ def _check_server_starts(content: Path) -> tuple[bool, str]:
                 proc.stdin.flush()
             line = proc.stdout.readline() if proc.stdout else None
             if not line:
-                return False, f"no initialize response; stderr: {proc.stderr.read()[-500:] if proc.stderr else ''}"
+                return (
+                    False,
+                    f"no initialize response; stderr: {proc.stderr.read()[-500:] if proc.stderr else ''}",
+                )
             resp = json.loads(line)
             if "result" not in resp:
                 return False, f"initialize error: {resp.get('error')}"
-            return True, f"serverInfo={resp['result'].get('serverInfo', {}).get('name')}"
+            return (
+                True,
+                f"serverInfo={resp['result'].get('serverInfo', {}).get('name')}",
+            )
         finally:
             proc.terminate()
             proc.wait(timeout=10)
@@ -92,7 +102,9 @@ def run_doctor(project: Path | None, profile: str | None) -> int:
         n_roles = len(bundle.roles)
         n_skills = len(bundle.skills)
         if n_instr + n_roles + n_skills == 0 and bundle.workflow is None:
-            failures.append("bundle is empty (no instructions, roles, skills, or workflow)")
+            failures.append(
+                "bundle is empty (no instructions, roles, skills, or workflow)"
+            )
         print(
             f"✓ bootstrap: profile={bundle.profile.id} ({bundle.profile.source}) "
             f"workflow={bundle.workflow.slug if bundle.workflow else None} "

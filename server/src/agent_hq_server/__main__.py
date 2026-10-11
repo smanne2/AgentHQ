@@ -26,13 +26,21 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--content", default=None, help="content tree path (default: env/repo content/)"
     )
-    parser.add_argument("--project", default=None, help="default project path for bootstrap")
-    parser.add_argument("--log-level", default=None, help="DEBUG, INFO (default), WARNING, ERROR")
+    parser.add_argument(
+        "--project", default=None, help="default project path for bootstrap"
+    )
+    parser.add_argument(
+        "--log-level", default=None, help="DEBUG, INFO (default), WARNING, ERROR"
+    )
     parser.add_argument(
         "--http", action="store_true", help="run as HTTP/SSE server (default: stdio)"
     )
-    parser.add_argument("--host", default="0.0.0.0", help="HTTP server host (default: 0.0.0.0)")
-    parser.add_argument("--port", type=int, default=3000, help="HTTP server port (default: 3000)")
+    parser.add_argument(
+        "--host", default="0.0.0.0", help="HTTP server host (default: 0.0.0.0)"
+    )
+    parser.add_argument(
+        "--port", type=int, default=3000, help="HTTP server port (default: 3000)"
+    )
     return parser.parse_args(argv)
 
 
@@ -42,7 +50,9 @@ def main(argv: list[str] | None = None) -> None:
         print(f"agent-hq-server {__version__}")  # explicit flag = not in protocol mode
         return
 
-    config = build(content_path=args.content, project_path=args.project, log_level=args.log_level)
+    config = build(
+        content_path=args.content, project_path=args.project, log_level=args.log_level
+    )
     server = create_server(config, host=args.host, port=args.port)
 
     if args.http:

@@ -63,7 +63,11 @@ def test_workflow_happy_path() -> None:
             "name": "Standard Feature",
             "description": "phased feature work",
             "phases": [
-                {"id": "design", "checklist": ["write design"], "gate": {"kind": "manual"}},
+                {
+                    "id": "design",
+                    "checklist": ["write design"],
+                    "gate": {"kind": "manual"},
+                },
                 {
                     "id": "implement",
                     "checklist": ["code", "tests"],
@@ -89,7 +93,9 @@ def test_workflow_gate_artifact_requires_pattern() -> None:
 
 def test_workflow_rejects_bad_phase_id_and_duplicates() -> None:
     with pytest.raises(ValidationError):
-        WorkflowFrontmatter.model_validate({"description": "d", "phases": [{"id": "Bad_ID"}]})
+        WorkflowFrontmatter.model_validate(
+            {"description": "d", "phases": [{"id": "Bad_ID"}]}
+        )
     with pytest.raises(ValidationError):
         WorkflowFrontmatter.model_validate(
             {
@@ -106,7 +112,9 @@ def test_profile_yaml_shape_with_aliased_matches() -> None:
             "name": "Node Web",
             "description": "TS/Node services",
             "matches": {
-                "anyOf": [{"file": "package.json", "containsAny": ["express", "typescript"]}]
+                "anyOf": [
+                    {"file": "package.json", "containsAny": ["express", "typescript"]}
+                ]
             },
             "defaults": {"workflow": "standard-feature", "roles": ["engineer"]},
         }
