@@ -84,7 +84,7 @@ def verify_gate(
             # We use a simple glob check for the pattern relative to project_path
             # Note: Gate patterns in technical.md are like 'docs/design/**'
             # We'll use project_path.glob(pattern)
-            # Handle double asterisks by converting to glob if necessary, 
+            # Handle double asterisks by converting to glob if necessary,
             # but Path.glob handles basic **
             matches = list(project_path.glob(gate.pattern))
             return len(matches) > 0

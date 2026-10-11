@@ -11,7 +11,8 @@ from pathlib import Path
 import typer
 
 from agent_hq_cli import doctor as doctor_cmd
-from agent_hq_cli import import_cmd, validate as validate_cmd
+from agent_hq_cli import import_cmd
+from agent_hq_cli import validate as validate_cmd
 from agent_hq_cli.init_cmd import _detect, init_project
 
 app = typer.Typer(
@@ -31,11 +32,17 @@ def version() -> None:
 
 @app.command()
 def init(
-    dir: Path = typer.Argument(Path.cwd(), help="Project directory to scaffold (default: CWD)."),
-    profile: str = typer.Option(None, "--profile", "-p", help="Pin this profile id (default: detected)."),
+    dir: Path = typer.Argument(None, help="Project directory to scaffold (default: CWD)."),
+    profile: str = typer.Option(
+        None, "--profile", "-p", help="Pin this profile id (default: detected)."
+    ),
     stack: str = typer.Option(None, "--stack", help="Override the detected stack label."),
     force: bool = typer.Option(False, "--force", help="Overwrite existing files."),
 ) -> None:
+    """Write AGENTS.md, mcp.json, and .agent-hq/profile.yaml into a project."""
+    # Re-declare as typer arguments/options for the backend runner
+    # but let's see if we can just use Defaults or fix them the "Typer way"
+
     """Write AGENTS.md, mcp.json, and .agent-hq/profile.yaml into a project."""
     dir = dir.resolve()
     detected_stack, detected_profile = _detect(dir)
@@ -66,8 +73,12 @@ def validate(
 
 @app.command("import")
 def import_content(
-    source: Path = typer.Argument(..., help="Path to community content (e.g. an awesome-copilot clone)."),
-    target: Path = typer.Argument(Path("content"), help="Content tree to import into (default: content/)."),
+    source: Path = typer.Argument(
+        ..., help="Path to community content (e.g. an awesome-copilot clone)."
+    ),
+    target: Path = typer.Argument(
+        Path("content"), help="Content tree to import into (default: content/)."
+    ),
     copy: bool = typer.Option(False, "--copy", help="Actually copy (default: dry-run)."),
 ) -> None:
     """Bring community content files into the content tree (dry-run by default)."""

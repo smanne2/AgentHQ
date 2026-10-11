@@ -37,7 +37,7 @@ def run_http(server: Any, log_level: str = "INFO") -> None:
     Uses FastMCP's built-in streamable HTTP transport which handles all
     SSE/JSON-RPC protocol details. Host and port are configured via FastMCP
     init parameters.
-    
+
     ``server`` is a ``FastMCP`` instance.
     """
     configure_http_logging(log_level)
@@ -51,6 +51,3 @@ def run_http(server: Any, log_level: str = "INFO") -> None:
         await server.run_streamable_http_async()
 
     anyio.run(serve)
-
-
-

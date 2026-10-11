@@ -29,7 +29,9 @@ def list_instructions(
         selected = [i for i in selected if tag in (i.frontmatter.tags or [])]
     return [
         InstructionSummary(
-            slug=i.slug, description=i.frontmatter.description, apply_to=i.frontmatter.apply_to
+            slug=i.slug,
+            description=i.frontmatter.description,
+            apply_to=i.frontmatter.apply_to,
         )
         for i in selected
     ]

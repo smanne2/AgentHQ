@@ -191,7 +191,9 @@ def _build_item(kind: Kind, path: Path) -> Role | Instruction | Skill | Workflow
 
 
 def _append(
-    catalog: Catalog, kind: Kind, item: Role | Instruction | Skill | Workflow | ProfileItem
+    catalog: Catalog,
+    kind: Kind,
+    item: Role | Instruction | Skill | Workflow | ProfileItem,
 ) -> None:
     if kind == "role":
         catalog.roles.append(item)  # type: ignore[arg-type]

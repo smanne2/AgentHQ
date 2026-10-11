@@ -18,7 +18,15 @@ from agent_hq_server.schema import Bundle, ErrorView
 
 log = logging.getLogger(__name__)
 
-_SCAN_IGNORED_DIRS = {".git", "node_modules", "__pycache__", ".venv", "venv", "dist", "build"}
+_SCAN_IGNORED_DIRS = {
+    ".git",
+    "node_modules",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "dist",
+    "build",
+}
 
 
 def bootstrap(

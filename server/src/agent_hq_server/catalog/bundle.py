@@ -9,7 +9,14 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from agent_hq_server.catalog.catalog import Catalog, Instruction, ProfileItem, Role, Skill, Workflow
+from agent_hq_server.catalog.catalog import (
+    Catalog,
+    Instruction,
+    ProfileItem,
+    Role,
+    Skill,
+    Workflow,
+)
 from agent_hq_server.catalog.matcher import ProfileSource, match_instructions
 from agent_hq_server.schema import (
     Bundle,
@@ -138,7 +145,9 @@ def _glob_of(item: Instruction) -> str:
 
 def _role_summary(role: Role) -> RoleSummary:
     return RoleSummary(
-        slug=role.slug, name=role.frontmatter.name, description=role.frontmatter.description
+        slug=role.slug,
+        name=role.frontmatter.name,
+        description=role.frontmatter.description,
     )
 
 

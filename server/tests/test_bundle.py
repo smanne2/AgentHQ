@@ -44,7 +44,13 @@ PROFILES_YAML = {
         "stack": ["python"],
         "defaults": {
             "workflow": "standard-feature",
-            "roles": ["architect", "engineer", "code-reviewer", "test-engineer", "docs-writer"],
+            "roles": [
+                "architect",
+                "engineer",
+                "code-reviewer",
+                "test-engineer",
+                "docs-writer",
+            ],
             "instructions": ["agent-safety"],
             "skills": ["acquire-codebase-knowledge"],
         },
@@ -83,7 +89,8 @@ def _node_project(tmp_path: Path) -> Path:
     project = tmp_path / "node-proj"
     (project / "src").mkdir(parents=True)
     (project / "package.json").write_text(
-        json.dumps({"name": "svc", "devDependencies": {"typescript": "5"}}), encoding="utf-8"
+        json.dumps({"name": "svc", "devDependencies": {"typescript": "5"}}),
+        encoding="utf-8",
     )
     (project / "src" / "index.ts").write_text("export {}\n", encoding="utf-8")
     return project

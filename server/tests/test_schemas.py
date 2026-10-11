@@ -63,7 +63,11 @@ def test_workflow_happy_path() -> None:
             "name": "Standard Feature",
             "description": "phased feature work",
             "phases": [
-                {"id": "design", "checklist": ["write design"], "gate": {"kind": "manual"}},
+                {
+                    "id": "design",
+                    "checklist": ["write design"],
+                    "gate": {"kind": "manual"},
+                },
                 {
                     "id": "implement",
                     "checklist": ["code", "tests"],

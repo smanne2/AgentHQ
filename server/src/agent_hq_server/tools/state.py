@@ -32,11 +32,19 @@ def report_progress(
     path = project_path or Path.cwd()
     workflow = catalog.find("workflow", workflow_slug)
     if not workflow:
-        return {"ok": False, "flags": [f"UNKNOWN_WORKFLOW:{workflow_slug}"], "nextPhase": None}
+        return {
+            "ok": False,
+            "flags": [f"UNKNOWN_WORKFLOW:{workflow_slug}"],
+            "nextPhase": None,
+        }
 
     # 1. Load state
     state = store.load_state(path, workflow_slug)
-    phases = workflow.frontmatter.phases
+    from agent_hq_server.schema.workflow import WorkflowFrontmatter
+
+    phases = (
+        workflow.frontmatter.phases if isinstance(workflow.frontmatter, WorkflowFrontmatter) else []
+    )
 
     # 2. Verify ordering
     ordering_flags = gates.verify_ordering(state, phase_id, phases)
@@ -58,13 +66,15 @@ def report_progress(
 
     # 4. Update state
     phase_state = state.get("phases", {}).get(phase_id, {})
-    phase_state.update({
-        "completed": completed,
-        "evidence": evidence,
-        "approved": approved,
-        "gate_passed": gate_passed,
-        "timestamp": time.time(),
-    })
+    phase_state.update(
+        {
+            "completed": completed,
+            "evidence": evidence,
+            "approved": approved,
+            "gate_passed": gate_passed,
+            "timestamp": time.time(),
+        }
+    )
     state.setdefault("phases", {})[phase_id] = phase_state
     store.save_state(path, workflow_slug, state)
 
@@ -72,7 +82,7 @@ def report_progress(
     next_phase = None
     for i, p in enumerate(phases):
         if p.id == phase_id and i + 1 < len(phases):
-            next_phase = phases[i+1].id
+            next_phase = phases[i + 1].id
             break
 
     flags = ordering_flags + ([] if gate_passed else [f"GATE_NOT_PASSED:{phase_obj.gate.kind}"])
