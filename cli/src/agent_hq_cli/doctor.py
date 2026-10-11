@@ -46,10 +46,11 @@ def _check_server_starts(content: Path) -> tuple[bool, str]:
                 )
                 + "\n"
             )
-            proc.stdin.flush()
-            line = proc.stdout.readline()
+            if proc.stdin:
+                proc.stdin.flush()
+            line = proc.stdout.readline() if proc.stdout else None
             if not line:
-                return False, f"no initialize response; stderr: {proc.stderr.read()[-500:]}"
+                return False, f"no initialize response; stderr: {proc.stderr.read()[-500:] if proc.stderr else ''}"
             resp = json.loads(line)
             if "result" not in resp:
                 return False, f"initialize error: {resp.get('error')}"
@@ -84,9 +85,9 @@ def run_doctor(project: Path | None, profile: str | None) -> int:
 
     # 2. bootstrap returns a non-empty bundle
     bundle = bootstrap(catalog, project, pinned_profile=profile)
-    if hasattr(bundle, "error"):
+    if hasattr(bundle, "error") and bundle.error:
         failures.append(f"bootstrap error: {bundle.error}")
-    else:
+    elif not hasattr(bundle, "error"):
         n_instr = len(bundle.instructions)
         n_roles = len(bundle.roles)
         n_skills = len(bundle.skills)
