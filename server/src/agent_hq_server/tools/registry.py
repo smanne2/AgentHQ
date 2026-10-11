@@ -83,15 +83,11 @@ def create_server(config: Config, host: str = "127.0.0.1", port: int = 8000) -> 
         return _dump(roles_mod.get_role(catalog, slug))
 
     @mcp.tool(name="agent_hq.list_instructions")
-    def list_instructions(
-        tag: str | None = None, convention: bool | None = None
-    ) -> dict[str, Any]:
+    def list_instructions(tag: str | None = None, convention: bool | None = None) -> dict[str, Any]:
         """List instructions (and conventions, which are tagged instructions)."""
         return {
             "instructions": _dump(
-                instructions_mod.list_instructions(
-                    catalog, tag=tag, convention=convention
-                )
+                instructions_mod.list_instructions(catalog, tag=tag, convention=convention)
             )
         }
 
@@ -134,14 +130,10 @@ def create_server(config: Config, host: str = "127.0.0.1", port: int = 8000) -> 
     def report_progress(
         workflowSlug: Annotated[str, Field(alias="workflowSlug")],
         phaseId: Annotated[str, Field(alias="phaseId")],
-        completed: Annotated[
-            list[int], Field(description="indices of completed checklist items")
-        ],
+        completed: Annotated[list[int], Field(description="indices of completed checklist items")],
         projectPath: Annotated[str | None, Field(alias="projectPath")] = None,
         evidence: Annotated[str | None, Field(alias="evidence")] = None,
-        approved: Annotated[
-            bool, Field(description="True if user approved manual gate")
-        ] = False,
+        approved: Annotated[bool, Field(description="True if user approved manual gate")] = False,
     ) -> dict[str, Any]:
         """Report completion of a phase. Returns status and next phase."""
         path = Path(projectPath).expanduser().resolve() if projectPath else None

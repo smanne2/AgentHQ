@@ -7,9 +7,9 @@ from agent_hq_server.util.slug import slug_from_dir, slug_from_filename
 
 
 def test_slug_from_filename_strips_kind_suffix() -> None:
-    assert slug_from_filename(
-        Path("agents/accessibility.agent.md"), (".agent.md",)
-    ) == ("accessibility")
+    assert slug_from_filename(Path("agents/accessibility.agent.md"), (".agent.md",)) == (
+        "accessibility"
+    )
     assert slug_from_filename(Path("agents/my.cool.role.agent.md"), (".agent.md",)) == (
         "my-cool-role"
     )
@@ -17,8 +17,7 @@ def test_slug_from_filename_strips_kind_suffix() -> None:
 
 def test_slug_from_filename_explicit_suffix() -> None:
     assert (
-        slug_from_filename(Path("profiles/node-web.profile.yaml"), (".profile.yaml",))
-        == "node-web"
+        slug_from_filename(Path("profiles/node-web.profile.yaml"), (".profile.yaml",)) == "node-web"
     )
 
 

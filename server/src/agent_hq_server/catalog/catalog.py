@@ -140,9 +140,7 @@ def load(root: Path) -> Catalog:
             catalog.issues.append(Issue(str(rel), _flatten(exc)))
             continue
         if item.slug in seen.setdefault(kind, set()):
-            catalog.issues.append(
-                Issue(str(rel), f"duplicate {kind} slug '{item.slug}'")
-            )
+            catalog.issues.append(Issue(str(rel), f"duplicate {kind} slug '{item.slug}'"))
             continue
         seen[kind].add(item.slug)
         _append(catalog, kind, item)
@@ -161,24 +159,14 @@ def _kind_for(rel: Path) -> Kind | None:
         return "instruction"
     if len(parts) == 3 and parts[0] == "skills" and parts[-1] == "SKILL.md":
         return "skill"
-    if (
-        len(parts) == 2
-        and parts[0] == "workflows"
-        and parts[1].endswith(".workflow.md")
-    ):
+    if len(parts) == 2 and parts[0] == "workflows" and parts[1].endswith(".workflow.md"):
         return "workflow"
-    if (
-        len(parts) == 2
-        and parts[0] == "profiles"
-        and parts[1].endswith(".profile.yaml")
-    ):
+    if len(parts) == 2 and parts[0] == "profiles" and parts[1].endswith(".profile.yaml"):
         return "profile"
     return None
 
 
-def _build_item(
-    kind: Kind, path: Path
-) -> Role | Instruction | Skill | Workflow | ProfileItem:
+def _build_item(kind: Kind, path: Path) -> Role | Instruction | Skill | Workflow | ProfileItem:
     if kind == "profile":
         data = fm.parse_yaml_file(path)
         frontmatter = Profile.model_validate(data)
@@ -196,9 +184,7 @@ def _build_item(
         return Instruction(slug=slug, path=path, frontmatter=frontmatter, body=doc.body)
     if kind == "skill":
         frontmatter = SkillFrontmatter.model_validate(doc.frontmatter)
-        return Skill(
-            slug=slug_from_dir(path), path=path, frontmatter=frontmatter, body=doc.body
-        )
+        return Skill(slug=slug_from_dir(path), path=path, frontmatter=frontmatter, body=doc.body)
     frontmatter = WorkflowFrontmatter.model_validate(doc.frontmatter)
     slug = slug_from_filename(path, _KIND_SUFFIXES["workflow"])
     return Workflow(slug=slug, path=path, frontmatter=frontmatter, body=doc.body)

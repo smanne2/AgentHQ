@@ -99,9 +99,7 @@ def _node_project(tmp_path: Path) -> Path:
 def _python_project(tmp_path: Path) -> Path:
     project = tmp_path / "py-proj"
     (project / "src").mkdir(parents=True)
-    (project / "pyproject.toml").write_text(
-        "[project]\nname = 'svc'\n", encoding="utf-8"
-    )
+    (project / "pyproject.toml").write_text("[project]\nname = 'svc'\n", encoding="utf-8")
     (project / "src" / "main.py").write_text("print('hi')\n", encoding="utf-8")
     return project
 
@@ -120,9 +118,7 @@ def _assert_bundle(result: object) -> Bundle:
 
 def _profile(catalog: Catalog, slug: str) -> ProfileItem:
     item = catalog.find("profile", slug)
-    assert isinstance(
-        item, ProfileItem
-    ), f"expected profile {slug}, got {type(item).__name__}"
+    assert isinstance(item, ProfileItem), f"expected profile {slug}, got {type(item).__name__}"
     return item
 
 
@@ -150,9 +146,7 @@ def catalog(tmp_path: Path) -> Catalog:
     return load(root)
 
 
-def test_bootstrap_node_project_selects_node_web(
-    catalog: Catalog, tmp_path: Path
-) -> None:
+def test_bootstrap_node_project_selects_node_web(catalog: Catalog, tmp_path: Path) -> None:
     result = _assert_bundle(bootstrap(catalog, _node_project(tmp_path)))
     assert result.profile.model_dump() == {
         "id": "node-web",
@@ -169,18 +163,14 @@ def test_bootstrap_node_project_selects_node_web(
     assert "Start phase 'discover'" in result.next_action
 
 
-def test_bootstrap_python_project_selects_python_oss(
-    catalog: Catalog, tmp_path: Path
-) -> None:
+def test_bootstrap_python_project_selects_python_oss(catalog: Catalog, tmp_path: Path) -> None:
     result = _assert_bundle(bootstrap(catalog, _python_project(tmp_path)))
     assert result.profile.id == "python-oss"
     assert result.profile.source == "auto"
     assert "docs-writer" in {r.slug for r in result.roles}
 
 
-def test_different_stacks_yield_different_bundles(
-    catalog: Catalog, tmp_path: Path
-) -> None:
+def test_different_stacks_yield_different_bundles(catalog: Catalog, tmp_path: Path) -> None:
     node = _assert_bundle(bootstrap(catalog, _node_project(tmp_path)))
     python = _assert_bundle(bootstrap(catalog, _python_project(tmp_path)))
     assert node.profile.id == "node-web"
@@ -188,9 +178,7 @@ def test_different_stacks_yield_different_bundles(
     assert {r.slug for r in node.roles} != {r.slug for r in python.roles}
 
 
-def test_bootstrap_undetectable_project_falls_back(
-    catalog: Catalog, tmp_path: Path
-) -> None:
+def test_bootstrap_undetectable_project_falls_back(catalog: Catalog, tmp_path: Path) -> None:
     project = tmp_path / "bare"
     project.mkdir()
     result = _assert_bundle(bootstrap(catalog, project))
@@ -200,9 +188,7 @@ def test_bootstrap_undetectable_project_falls_back(
     assert {i.slug for i in result.instructions} == {"agent-safety"}
 
 
-def test_bootstrap_pinned_profile_overrides_detection(
-    catalog: Catalog, tmp_path: Path
-) -> None:
+def test_bootstrap_pinned_profile_overrides_detection(catalog: Catalog, tmp_path: Path) -> None:
     project = _node_project(tmp_path)
     _pin(project, "python-oss")
     result = _assert_bundle(bootstrap(catalog, project))
@@ -210,9 +196,7 @@ def test_bootstrap_pinned_profile_overrides_detection(
     assert result.profile.source == "pinned"
 
 
-def test_bootstrap_explicit_pin_beats_file_pin(
-    catalog: Catalog, tmp_path: Path
-) -> None:
+def test_bootstrap_explicit_pin_beats_file_pin(catalog: Catalog, tmp_path: Path) -> None:
     project = _node_project(tmp_path)
     _pin(project, "python-oss")
     result = _assert_bundle(bootstrap(catalog, project, pinned_profile="node-web"))
@@ -239,12 +223,8 @@ def test_glob_instructions_require_project_files(tmp_path: Path) -> None:
     profile = _profile(test_catalog, "node-web")
 
     warnings: list[str] = []
-    with_files = assemble_bundle(
-        test_catalog, profile, "auto", ["src/index.ts"], warnings
-    )
-    without_files = assemble_bundle(
-        test_catalog, profile, "auto", ["README.md"], warnings
-    )
+    with_files = assemble_bundle(test_catalog, profile, "auto", ["src/index.ts"], warnings)
+    without_files = assemble_bundle(test_catalog, profile, "auto", ["README.md"], warnings)
     assert "ts" in {i.slug for i in with_files.instructions}
     assert "ts" not in {i.slug for i in without_files.instructions}
     assert any("ts" in w and "no project file matched" in w for w in warnings)

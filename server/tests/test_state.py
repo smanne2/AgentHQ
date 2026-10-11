@@ -72,30 +72,18 @@ def test_gate_kinds(temp_project):
     project_path = temp_project
 
     # Manual gate
+    assert gates.verify_gate(Gate(kind="manual"), project_path, [], [], None, approved=True) is True
     assert (
-        gates.verify_gate(
-            Gate(kind="manual"), project_path, [], [], None, approved=True
-        )
-        is True
-    )
-    assert (
-        gates.verify_gate(
-            Gate(kind="manual"), project_path, [], [], None, approved=False
-        )
-        is False
+        gates.verify_gate(Gate(kind="manual"), project_path, [], [], None, approved=False) is False
     )
 
     # Checklist gate
     assert (
-        gates.verify_gate(
-            Gate(kind="checklist-complete"), project_path, [0, 1], ["a", "b"], None
-        )
+        gates.verify_gate(Gate(kind="checklist-complete"), project_path, [0, 1], ["a", "b"], None)
         is True
     )
     assert (
-        gates.verify_gate(
-            Gate(kind="checklist-complete"), project_path, [0], ["a", "b"], None
-        )
+        gates.verify_gate(Gate(kind="checklist-complete"), project_path, [0], ["a", "b"], None)
         is False
     )
 
@@ -104,15 +92,11 @@ def test_gate_kinds(temp_project):
     docs_dir.mkdir()
     (docs_dir / "design.md").write_text("content")
     assert (
-        gates.verify_gate(
-            Gate(kind="artifact", pattern="docs/*"), project_path, [], [], None
-        )
+        gates.verify_gate(Gate(kind="artifact", pattern="docs/*"), project_path, [], [], None)
         is True
     )
     assert (
-        gates.verify_gate(
-            Gate(kind="artifact", pattern="missing/*"), project_path, [], [], None
-        )
+        gates.verify_gate(Gate(kind="artifact", pattern="missing/*"), project_path, [], [], None)
         is False
     )
 

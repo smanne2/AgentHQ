@@ -56,7 +56,8 @@ def _check_server_starts(content: Path) -> tuple[bool, str]:
             if not line:
                 return (
                     False,
-                    f"no initialize response; stderr: {proc.stderr.read()[-500:] if proc.stderr else ''}",
+                    f"no initialize response; stderr: "
+                    f"{proc.stderr.read()[-500:] if proc.stderr else ''}",
                 )
             resp = json.loads(line)
             if "result" not in resp:

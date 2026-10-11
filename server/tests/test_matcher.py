@@ -37,9 +37,7 @@ def catalog(tmp_path: Path):
     root = tmp_path / "content" / "profiles"
     root.mkdir(parents=True)
     for _, data in PROFILES_YAML.items():
-        (root / f"{data['id']}.profile.yaml").write_text(
-            yaml.safe_dump(data), encoding="utf-8"
-        )
+        (root / f"{data['id']}.profile.yaml").write_text(yaml.safe_dump(data), encoding="utf-8")
     return load(tmp_path / "content")
 
 
@@ -115,9 +113,7 @@ def test_tag_filter(tmp_path: Path) -> None:
     (root / "a.instructions.md").write_text(
         "---\ndescription: d\ntags: [typescript]\n---\nb\n", encoding="utf-8"
     )
-    (root / "b.instructions.md").write_text(
-        "---\ndescription: d\n---\nb\n", encoding="utf-8"
-    )
+    (root / "b.instructions.md").write_text("---\ndescription: d\n---\nb\n", encoding="utf-8")
     catalog = load(tmp_path / "content")
 
     tagged = match_instructions(catalog.instructions, ["x.ts"], tag="typescript")

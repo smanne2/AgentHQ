@@ -23,9 +23,7 @@ class FileMatch(BaseModel):
 
 
 class Matches(BaseModel):
-    model_config = ConfigDict(
-        extra="allow", protected_namespaces=(), populate_by_name=True
-    )
+    model_config = ConfigDict(extra="allow", protected_namespaces=(), populate_by_name=True)
 
     any_of: list[FileMatch] = Field(default_factory=list, alias="anyOf")
     all_of: list[FileMatch] = Field(default_factory=list, alias="allOf")

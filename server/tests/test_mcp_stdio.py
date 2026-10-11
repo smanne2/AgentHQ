@@ -48,9 +48,7 @@ class _Client:
         # unreliable for text-mode wrappers in some environments (tty/CI).
         self._lines: queue.Queue[str | None] = queue.Queue()
         assert proc.stdout is not None
-        threading.Thread(
-            target=self._read_stdout, args=(proc.stdout,), daemon=True
-        ).start()
+        threading.Thread(target=self._read_stdout, args=(proc.stdout,), daemon=True).start()
 
     def _send(self, message: dict) -> None:
         assert self.proc.stdin is not None
@@ -72,14 +70,10 @@ class _Client:
         except queue.Empty as exc:
             raise TimeoutError("no MCP response within deadline") from exc
         if line is None:
-            raise AssertionError(
-                f"server closed stdout; stderr: {self._drain_stderr()}"
-            )
+            raise AssertionError(f"server closed stdout; stderr: {self._drain_stderr()}")
         return json.loads(line)
 
-    def request(
-        self, method: str, params: dict | None = None, timeout: float = TIMEOUT
-    ) -> dict:
+    def request(self, method: str, params: dict | None = None, timeout: float = TIMEOUT) -> dict:
         self._next_id += 1
         envelope = {"jsonrpc": "2.0", "id": self._next_id, "method": method}
         if params is not None:
@@ -170,9 +164,7 @@ def test_mcp_stdio_full_roundtrip(project_dir: Path) -> None:
         }
         assert info["structuredContent"]["profile_ids"] == ["default"]
 
-        bootstrap = _call(
-            client, "agent_hq.bootstrap", {"projectPath": str(project_dir)}
-        )
+        bootstrap = _call(client, "agent_hq.bootstrap", {"projectPath": str(project_dir)})
         assert bootstrap["isError"] is False
         bundle = bootstrap["structuredContent"]
         assert bundle["profile"] == {
@@ -199,9 +191,7 @@ def test_mcp_stdio_full_roundtrip(project_dir: Path) -> None:
             "address-comments",
             "adr-generator",
         }
-        role = _call(client, "agent_hq.get_role", {"slug": "adr-generator"})[
-            "structuredContent"
-        ]
+        role = _call(client, "agent_hq.get_role", {"slug": "adr-generator"})["structuredContent"]
         assert role["name"] == "ADR Generator" and "ADR" in role["body"]
 
         instructions = _call(client, "agent_hq.list_instructions")["structuredContent"][
@@ -218,14 +208,10 @@ def test_mcp_stdio_full_roundtrip(project_dir: Path) -> None:
             "acquire-codebase-knowledge",
             "code-review",
         }
-        skill = _call(client, "agent_hq.get_skill", {"slug": "code-review"})[
-            "structuredContent"
-        ]
+        skill = _call(client, "agent_hq.get_skill", {"slug": "code-review"})["structuredContent"]
         assert skill["body"] and isinstance(skill["files"], list)
 
-        workflows = _call(client, "agent_hq.list_workflows")["structuredContent"][
-            "workflows"
-        ]
+        workflows = _call(client, "agent_hq.list_workflows")["structuredContent"]["workflows"]
         assert workflows[0]["phases"][0] == {
             "id": "discover",
             "title": "Discovery & Context",

@@ -16,9 +16,7 @@ def list_roles(catalog: Catalog, tag: str | None = None) -> list[RoleSummary]:
     if tag:
         selected = [r for r in selected if tag in (r.frontmatter.tags or [])]
     return [
-        RoleSummary(
-            slug=r.slug, name=r.frontmatter.name, description=r.frontmatter.description
-        )
+        RoleSummary(slug=r.slug, name=r.frontmatter.name, description=r.frontmatter.description)
         for r in selected
     ]
 
@@ -29,11 +27,7 @@ def get_role(catalog: Catalog, slug: str) -> RoleView | ErrorView:
     if not isinstance(item, Role):
         return _unknown(slug, "role", [r.slug for r in catalog.roles])
     fm = item.frontmatter
-    extras = {
-        k: v
-        for k, v in (fm.model_extra or {}).items()
-        if k not in RoleView.model_fields
-    }
+    extras = {k: v for k, v in (fm.model_extra or {}).items() if k not in RoleView.model_fields}
     return RoleView(
         slug=item.slug,
         name=fm.name,

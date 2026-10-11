@@ -44,9 +44,7 @@ def get_instruction(catalog: Catalog, slug: str) -> InstructionViewFull | ErrorV
         return _unknown(slug, [i.slug for i in catalog.instructions])
     fm = item.frontmatter
     extras = {
-        k: v
-        for k, v in (fm.model_extra or {}).items()
-        if k not in InstructionViewFull.model_fields
+        k: v for k, v in (fm.model_extra or {}).items() if k not in InstructionViewFull.model_fields
     }
     return InstructionViewFull(
         slug=item.slug,

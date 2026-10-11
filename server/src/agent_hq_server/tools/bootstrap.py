@@ -73,9 +73,7 @@ def _project_file_patterns(project_path: Path) -> list[str]:
     patterns: list[str] = []
     try:
         for path in project_path.rglob("*"):
-            if path.is_file() and all(
-                part not in _SCAN_IGNORED_DIRS for part in path.parts
-            ):
+            if path.is_file() and all(part not in _SCAN_IGNORED_DIRS for part in path.parts):
                 patterns.append(path.relative_to(project_path).as_posix())
     except OSError:
         return []
