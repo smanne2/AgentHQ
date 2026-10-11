@@ -100,11 +100,13 @@ def run_doctor(project: Path | None, profile: str | None) -> int:
     if hasattr(bundle, "error"):
         # Type narrowing that Pyright accepts for hasattr
         from agent_hq_server.schema.view import ErrorView
+
         if isinstance(bundle, ErrorView):
             failures.append(f"bootstrap error: {bundle.error}")
     else:
         # Use type narrowing to satisfy Pyright
         from agent_hq_server.schema.bundle import Bundle
+
         if isinstance(bundle, Bundle):
             n_instr = len(bundle.instructions)
             n_roles = len(bundle.roles)
