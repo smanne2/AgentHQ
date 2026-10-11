@@ -103,9 +103,7 @@ def run_doctor(project: Path | None, profile: str | None) -> int:
         n_roles = len(bundle.roles)
         n_skills = len(bundle.skills)
         if n_instr + n_roles + n_skills == 0 and bundle.workflow is None:
-            failures.append(
-                "bundle is empty (no instructions, roles, skills, or workflow)"
-            )
+            failures.append("bundle is empty (no instructions, roles, skills, or workflow)")
         print(
             f"✓ bootstrap: profile={bundle.profile.id} ({bundle.profile.source}) "
             f"workflow={bundle.workflow.slug if bundle.workflow else None} "
