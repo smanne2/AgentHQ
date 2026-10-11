@@ -1,0 +1,24 @@
+services:
+  agent-hq:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agent-hq
+    restart: unless-stopped
+    environment:
+      - AGENT_HQ_LOG_LEVEL=INFO
+      - PYTHONUNBUFFERED=1
+    # Expose HTTP/SSE port for MCP clients (VS Code, Claude Desktop, etc.)
+    ports:
+      - "3000:3000"
+    # Health check ensures container is responding
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    # Optional: map a local content directory to the container
+    # volumes:
+    #   - ./content:/home/agenthq/content:ro
+

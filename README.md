@@ -6,16 +6,25 @@ Every new project starts from the same guidance and process. Development stops b
 
 ## Quickstart (< 10 min)
 
-### 1. Installation
-Ensure you have `uv` installed. The server is part of the workspace:
+### 1. Installation & Deployment (Docker)
+The recommended way to run Agent HQ is via Docker for stability and isolation:
 ```bash
-uv sync --all-packages
+docker compose up -d
 ```
+This starts the server in production mode on port 3000.
 
 ### 2. Configuration
-Add Agent HQ to your MCP client (e.g., VS Code + Cline). Use the following configuration:
-- **Command**: `uv run --project /path/to/agent-hq-root agent-hq-server`
-- **Env**: `AGENT_HQ_CONTENT=/path/to/agent-hq-root/content`
+Add Agent HQ to your MCP client (e.g., VS Code, Claude Desktop). Use the following SSE configuration:
+- **Type**: `sse`
+- **URL**: `http://localhost:3000/mcp`
+
+Example for `mcp.json`:
+```json
+"agent-hq": {
+  "type": "sse",
+  "url": "http://localhost:3000/mcp"
+}
+```
 
 ### 3. Using Agent HQ in a Project
 To start a governed session in your project:

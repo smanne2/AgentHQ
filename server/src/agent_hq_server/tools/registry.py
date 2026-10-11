@@ -41,7 +41,7 @@ INSTRUCTIONS = (
 )
 
 
-def create_server(config: Config) -> FastMCP:
+def create_server(config: Config, host: str = "127.0.0.1", port: int = 8000) -> FastMCP:
     """Build the FastMCP instance with all tools wired to ``config``'s catalog."""
     catalog = load(config.content_path)
     log.info(
@@ -54,7 +54,7 @@ def create_server(config: Config) -> FastMCP:
     if config.project_path is None:
         log.info("no project path (AGENT_HQ_PROJECT unset); bootstrap will use CWD")
 
-    mcp = FastMCP(name="agent-hq", instructions=INSTRUCTIONS)
+    mcp = FastMCP(name="agent-hq", instructions=INSTRUCTIONS, host=host, port=port)
 
     @mcp.tool(name="agent_hq.bootstrap")
     def bootstrap(
@@ -132,10 +132,10 @@ def create_server(config: Config) -> FastMCP:
 
     @mcp.tool(name="agent_hq.report_progress")
     def report_progress(
-        projectPath: Annotated[str | None, Field(alias="projectPath")] = None,
         workflowSlug: Annotated[str, Field(alias="workflowSlug")],
         phaseId: Annotated[str, Field(alias="phaseId")],
         completed: Annotated[list[int], Field(description="indices of completed checklist items")],
+        projectPath: Annotated[str | None, Field(alias="projectPath")] = None,
         evidence: Annotated[str | None, Field(alias="evidence")] = None,
         approved: Annotated[bool, Field(description="True if user approved manual gate")] = False,
     ) -> dict[str, Any]:
