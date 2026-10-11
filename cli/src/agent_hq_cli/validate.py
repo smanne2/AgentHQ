@@ -8,8 +8,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from agent_hq_cli.config import content_root
 from agent_hq_server.catalog.catalog import load
+
+from agent_hq_cli.config import content_root
 
 
 def run_validate(path: Path | None) -> int:

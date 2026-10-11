@@ -10,28 +10,63 @@ Usage: python3 scan.py --output docs/codebase/.codebase-scan.txt
 from __future__ import annotations
 
 import argparse
+import contextlib
 import os
 import sys
 from collections import Counter
 from pathlib import Path
 
 IGNORED = {
-    ".git", "node_modules", "__pycache__", ".venv", "venv", "dist", "build",
-    ".next", "out", "target", ".mypy_cache", ".ruff_cache", "coverage",
+    ".git",
+    "node_modules",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "dist",
+    "build",
+    ".next",
+    "out",
+    "target",
+    ".mypy_cache",
+    ".ruff_cache",
+    "coverage",
 }
 
 LANGUAGE_EXT = {
-    ".ts": "typescript", ".tsx": "typescript", ".js": "javascript",
-    ".jsx": "javascript", ".mjs": "javascript", ".cjs": "javascript",
-    ".py": "python", ".go": "go", ".rs": "rust", ".java": "java",
-    ".rb": "ruby", ".php": "php", ".c": "c", ".h": "c", ".cpp": "cpp",
-    ".cs": "csharp", ".swift": "swift", ".kt": "kotlin", ".sh": "shell",
+    ".ts": "typescript",
+    ".tsx": "typescript",
+    ".js": "javascript",
+    ".jsx": "javascript",
+    ".mjs": "javascript",
+    ".cjs": "javascript",
+    ".py": "python",
+    ".go": "go",
+    ".rs": "rust",
+    ".java": "java",
+    ".rb": "ruby",
+    ".php": "php",
+    ".c": "c",
+    ".h": "c",
+    ".cpp": "cpp",
+    ".cs": "csharp",
+    ".swift": "swift",
+    ".kt": "kotlin",
+    ".sh": "shell",
 }
 
 MANIFESTS = [
-    "package.json", "pyproject.toml", "setup.py", "requirements.txt", "Pipfile",
-    "go.mod", "Cargo.toml", "pom.xml", "build.gradle", "composer.json",
-    "Gemfile", "Gemfile.lock",
+    "package.json",
+    "pyproject.toml",
+    "setup.py",
+    "requirements.txt",
+    "Pipfile",
+    "go.mod",
+    "Cargo.toml",
+    "pom.xml",
+    "build.gradle",
+    "composer.json",
+    "Gemfile",
+    "Gemfile.lock",
 ]
 
 
@@ -48,7 +83,8 @@ def scan(root: Path) -> str:
     lines_by_lang: Counter = Counter()
     manifests = [f.name for f in files if f.name in MANIFESTS and f.is_file()]
     test_markers = [
-        f for f in files
+        f
+        for f in files
         if ("test" in f.name.lower() or f.name in ("conftest.py",)) and f.suffix in LANGUAGE_EXT
     ]
 
@@ -56,10 +92,8 @@ def scan(root: Path) -> str:
         if f.suffix in LANGUAGE_EXT and f.is_file():
             lang = LANGUAGE_EXT[f.suffix]
             langs[lang] += 1
-            try:
+            with contextlib.suppress(OSError):
                 lines_by_lang[lang] += sum(1 for _ in f.open(encoding="utf-8", errors="ignore"))
-            except OSError:
-                pass
 
     out: list[str] = ["# Codebase Scan", ""]
 
@@ -102,7 +136,8 @@ def scan(root: Path) -> str:
 
     out.append("## CI/CD")
     ci = [
-        f.name for f in files
+        f.name
+        for f in files
         if f.name in ("Dockerfile", "docker-compose.yml")
         or (f.parts and ".github" in f.parts and "workflows" in f.parts)
     ]

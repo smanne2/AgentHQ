@@ -10,9 +10,10 @@ import sys
 import tempfile
 from pathlib import Path
 
-from agent_hq_cli.config import content_root
 from agent_hq_server.catalog.catalog import load
 from agent_hq_server.tools.bootstrap import bootstrap
+
+from agent_hq_cli.config import content_root
 
 
 def _check_server_starts(content: Path) -> tuple[bool, str]:
@@ -22,17 +23,29 @@ def _check_server_starts(content: Path) -> tuple[bool, str]:
     with tempfile.TemporaryDirectory() as proj:
         env["AGENT_HQ_PROJECT"] = proj
         proc = subprocess.Popen(
-            cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE, env=env, text=True,
+            cmd,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=env,
+            text=True,
         )
         try:
-            proc.stdin.write(json.dumps({
-                "jsonrpc": "2.0", "id": 1, "method": "initialize",
-                "params": {
-                    "protocolVersion": "2024-11-05", "capabilities": {},
-                    "clientInfo": {"name": "doctor", "version": "0"},
-                },
-            }) + "\n")
+            proc.stdin.write(
+                json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "initialize",
+                        "params": {
+                            "protocolVersion": "2024-11-05",
+                            "capabilities": {},
+                            "clientInfo": {"name": "doctor", "version": "0"},
+                        },
+                    }
+                )
+                + "\n"
+            )
             proc.stdin.flush()
             line = proc.stdout.readline()
             if not line:

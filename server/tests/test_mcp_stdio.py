@@ -28,6 +28,8 @@ EXPECTED_TOOLS = {
     "agent_hq.get_role",
     "agent_hq.list_instructions",
     "agent_hq.get_instruction",
+    "agent_hq.get_progress",
+    "agent_hq.report_progress",
     "agent_hq.list_skills",
     "agent_hq.get_skill",
     "agent_hq.list_workflows",

@@ -67,7 +67,10 @@ def run_import(source: Path, target: Path, copy: bool) -> int:
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dest)
 
-    print(f"\n{'✓ imported' if copy else '✓ dry-run'}: {len(items)} file(s), {collisions} collision(s)")
+    print(
+        f"\n{'✓ imported' if copy else '✓ dry-run'}: "
+        f"{len(items)} file(s), {collisions} collision(s)"
+    )
     if not copy and items:
         print("  (pass --copy to actually copy)")
     return 0

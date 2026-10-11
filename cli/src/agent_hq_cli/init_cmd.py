@@ -38,10 +38,11 @@ def _write(path: Path, content: str, overwrite: bool) -> str:
 def _detect(project: Path) -> tuple[str, str]:
     """Best-effort (stack, profile_id) for the project, via the server's matcher."""
     try:
-        from agent_hq_cli.config import content_root
         from agent_hq_server.catalog.catalog import load
         from agent_hq_server.catalog.detect import detect_stack
         from agent_hq_server.catalog.matcher import pick_profile
+
+        from agent_hq_cli.config import content_root
 
         catalog = load(content_root())
         item, _source = pick_profile(catalog, signals=detect_stack(project))
@@ -69,7 +70,10 @@ def init_project(target: Path, profile: str, stack: str, overwrite: bool) -> lis
 
     mcp_cfg = json.loads((templates / "mcp.json").read_text(encoding="utf-8"))
     mcp_cfg["mcpServers"]["agent-hq"]["args"] = [
-        "run", "--project", values["agent_hq_root"], "agent-hq-server"
+        "run",
+        "--project",
+        values["agent_hq_root"],
+        "agent-hq-server",
     ]
     mcp_cfg["mcpServers"]["agent-hq"]["env"]["AGENT_HQ_CONTENT"] = values["content_path"]
     report.append(
@@ -82,6 +86,8 @@ def init_project(target: Path, profile: str, stack: str, overwrite: bool) -> lis
 
     profile_tmpl = (templates / ".agent-hq" / "profile.yaml").read_text(encoding="utf-8")
     report.append(
-        _write(target / ".agent-hq" / "profile.yaml", _render(profile_tmpl, placeholders), overwrite)
+        _write(
+            target / ".agent-hq" / "profile.yaml", _render(profile_tmpl, placeholders), overwrite
+        )
     )
     return report
