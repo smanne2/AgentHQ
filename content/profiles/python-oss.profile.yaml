@@ -1,0 +1,27 @@
+id: python-oss
+name: Python OSS Project
+description: Python open source projects using pyproject.toml or requirements.txt.
+matches:
+  anyOf:
+    - file: pyproject.toml
+    - file: requirements.txt
+stack:
+  - python
+defaults:
+  workflow: standard-feature
+  roles:
+    - architect
+    - engineer
+    - code-reviewer
+    - test-engineer
+    - docs-writer
+  instructions:
+    - git-hygiene
+    - agent-safety
+    - python
+    - doc-updates
+  skills:
+    - acquire-codebase-knowledge
+    - adr-writer
+    - test-plan
+    - pre-commit-check

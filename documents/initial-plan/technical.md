@@ -222,10 +222,10 @@ You are a principal architect…
 ```python
 # schema/role.py (sketch)
 class RoleFrontmatter(BaseModel):
-    model_config = ConfigDict(extra="allow")      # tolerate unknown keys (R3)
+    model_config = ConfigDict(extra="allow")  # tolerate unknown keys (R3)
     name: str | None = None
-    description: str                             # required for every kind
-    model: str | None = None                     # passthrough (client-specific)
+    description: str  # required for every kind
+    model: str | None = None  # passthrough (client-specific)
     tools: list[str] | None = None
     tags: list[str] | None = None
 ```

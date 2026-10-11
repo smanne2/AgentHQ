@@ -1,0 +1,4 @@
+# Agent HQ pinned profile for this project.
+# Set `profile` to a content-tree profile id (e.g. node-web, python-oss, default).
+# Detection (package.json / pyproject.toml / ...) is used when this is absent.
+profile: __PROFILE__

@@ -1,0 +1,201 @@
+AGENT HQ — CROSS-SESSION CONTEXT FILE
+=====================================
+Purpose: handoff context for fresh agent sessions. Read this FIRST (AGENTS.md
+tells you to). Keep it updated whenever state changes meaningfully — do it in
+the same session as the work, alongside the feature's tracking.md.
+
+Last updated: 2026-10-05
+
+
+1. WHAT THIS PROJECT IS
+-----------------------
+Agent HQ: a centralized MCP server (Python) that is the single source of truth
+for how coding agents behave — roles, instructions, skills, standardized
+workflows, stack conventions. Any MCP client (VS Code Copilot, Cline, Claude
+Desktop) connects and pulls exactly the guidance its project needs.
+Consistency mechanism: pull-based "bootstrap handshake" (MCP cannot inject
+into system prompts) — every project ships an AGENTS.md stub that orders the
+agent to call agent_hq.bootstrap first, then follow the returned workflow.
+
+Authoritative docs: documents/initial-plan/  (plan.md = what/when,
+technical.md = why/how, tracking.md = live status). Read those for details;
+this file only carries the short-form handoff.
+
+
+2. CURRENT STATE (2026-10-05)
+-----------------------------
+- Phase 0 (scaffold): DONE — uv workspace, ruff/pyright/pytest/CI, check_lines
+- Phase 1 (content core): DONE — pydantic schemas for role, instruction,
+  skill, workflow, profile, and bundle; frontmatter parsing; catalog indexing
+  and content digesting; profile pinning (pinned > auto > fallback); glob/tag
+  matching; fixtures from awesome-copilot and repo-local content.
+- Phase 2 (MCP server over stdio, agent_hq.* tools): DONE — 11 tools
+  (bootstrap, content_info, list/get roles/instructions/skills/workflows,
+  get_checklist) over FastMCP stdio; console entrypoint agent-hq-server.
+- Phase 3 (profiles & matching): DONE (2026-10-05) —
+  * detect_stack (manifest signals) → pick_profile (pinned > auto > fallback)
+    → assemble_bundle, wired into tools/bootstrap.py (inline phase-2
+    resolution removed).
+  * content/profiles/{node-web,python-oss,default}.profile.yaml (default
+    mirrors the fixture).
+  * assemble_bundle: `source` param; warnings for unknown slugs / instructions
+    whose applyTo globs match no project file; bootstrap scans the project's
+    relative file paths (pruning .git, node_modules, __pycache__, .venv, venv,
+    dist, build) to evaluate those globs.
+  * server/tests/test_bundle.py — 12 tests (stacks → different bundles,
+    pinned/explicit overrides, fallback, glob matching, vendor pruning,
+    ErrorView when no profiles).
+  * Removed dead code: detect_stack_from_signals, matcher.BundleMatchInput.
+- Validation status (2026-10-05): ALL GATES GREEN — ruff check, ruff format,
+  pyright 0 errors (`uvx pyright` in this sandbox), pytest 60 passed,
+  check_lines (44 files). Live stdio probes: node/py trees → default profile
+  (fixture tree has only `default`), warnings path verified.
+- Repo status: Phase 3 code is on the working tree (gate repair + Phase 3
+  completion); commit next. Next logical step: Phase 4 (client artifacts +
+  CLI: AGENTS.md stub, mcp.json templates, `agent-hq init/doctor/validate`).
+
+The implemented Phase 2 artifacts are:
+  server/src/agent_hq_server/__main__.py
+  server/src/agent_hq_server/config.py
+  server/src/agent_hq_server/catalog/{catalog.py,frontmatter.py,matcher.py}
+  server/src/agent_hq_server/schema/{bundle.py,common.py,instruction.py,
+    profile.py,role.py,skill.py,workflow.py}
+  server/src/agent_hq_server/tools/{bootstrap.py,content_info.py,
+    instructions.py,registry.py,roles.py,skills.py,workflows.py}
+  server/src/agent_hq_server/transport/stdio.py
+  server/src/agent_hq_server/util/{digest.py,result.py,slug.py}
+
+The implemented Phase 2 artifacts are:
+  server/src/agent_hq_server/__main__.py
+  server/src/agent_hq_server/config.py
+  server/src/agent_hq_server/catalog/{catalog.py,frontmatter.py,matcher.py}
+  server/src/agent_hq_server/schema/{bundle.py,common.py,instruction.py,
+    profile.py,role.py,skill.py,workflow.py}
+  server/src/agent_hq_server/tools/{bootstrap.py,content_info.py,
+    instructions.py,registry.py,roles.py,skills.py,workflows.py}
+  server/src/agent_hq_server/transport/stdio.py
+  server/src/agent_hq_server/util/{digest.py,result.py,slug.py}
+Phase 3 artifacts (see phase status above):
+  server/src/agent_hq_server/catalog/{detect.py,bundle.py}
+  content/profiles/{node-web,python-oss,default}.profile.yaml
+  server/tests/test_bundle.py
+
+Next logical step: Phase 4 (client artifacts + CLI: AGENTS.md bootstrap stub,
+mcp.json templates for VS Code + Cline, `agent-hq init/doctor/validate`), then
+Phase 5 (seeded content), then Phase 7 (validation & docs). See
+documents/initial-plan/technical.md for the full plan and contract details.
+
+
+3. DECISIONS & WHY (full rationale in technical.md §6)
+------------------------------------------------------
+D1 Python ≥3.11 + uv workspace, official `mcp` SDK (FastMCP), pydantic v2.
+   WHY: user maintainability (explicit user decision, 2026-09-24). TS was
+   technically equally viable (reference SDK + zod) but set aside. Bonus:
+   .gitignore in this repo was already the Python template.
+D2 stdio transport v1 (mcp.json per client). WHY: zero infra, all target
+   clients support it. Streamable-HTTP is a v2 add; SDK usage is isolated to
+   transport/stdio.py + tools/registry.py so the swap is cheap (DD10: pin the
+   mcp SDK version — its API churns).
+D3 Build in THIS workspace (was named "special-telegram"). Suggest renaming
+   the GitHub repo to agent-hq. Monorepo: server+cli+content in one git repo;
+   content can be split into its own repo later via AGENT_HQ_CONTENT path.
+D4 First validation clients: VS Code + Cline (Claude Desktop second).
+D5 Seed content = curated awesome-copilot imports (MIT) + original writes.
+D6 Naming: server package agent-hq-server, CLI package agent-hq.
+DD5 Conventions are instructions: same schema, own directory + stack tag —
+   one fewer type, zero capability loss.
+300-LINE RULE = SOURCE FILES ONLY (user clarified). Documents/content exempt.
+   Enforced by server/scripts/check_lines.py in CI (ruff has no line-count
+   rule — hence the custom script).
+
+
+4. LEARNINGS & GOTCHAS (hard-won; do not rediscover)
+----------------------------------------------------
+- awesome-copilot applyTo comes as a SINGLE STRING that may be
+  COMMA-SEPARATED (e.g. astro: '**/*.astro, **/*.ts, ...'). Normalization:
+  str → split on ","; list → as-is. Also the YAML key is camelCase "applyTo"
+  while our field is apply_to → needs pydantic alias + populate_by_name.
+  (This was a real bug: without the alias the key silently landed in extras
+  and matching quietly did nothing.)
+- Pydantic v2: field named `model` is fine if you set
+  protected_namespaces=() in model_config — role agents use `model:`.
+- Tolerant imports: extra="allow" on all frontmatter models so unknown
+  future keys never break the index (risk R3). Bad files must become Issues,
+  never exceptions — catalog.load() catches everything.
+- pyright (npx) cannot see .venv unless pyrightconfig.json sets
+  "venvPath": "." + "venv": ".venv". Without it, unresolved imports report as
+  errors AND mask the real type errors (we saw 27 fake → 16 real).
+- ruff B009 forbids getattr(obj, "const") while pyright rejects direct attr
+  access on pydantic extras → use model.model_extra (dict | None) in tests.
+- uv: `uv sync` from the workspace root syncs all members (server+cli) into
+  one .venv. System python here is 3.9 — uv auto-provisions managed CPython.
+- pathspec (gitwildmatch) is the glob engine for applyTo matching; build one
+  PathSpec per instruction's glob list, test each project file path.
+- Agent-written files can be clobbered by an editor auto-saving a stale
+  buffer (happened to plan.md once — my write landed, editor reverted it).
+  Fix: commit work promptly; untracked files are the vulnerable ones.
+- Awesome-copilot's own `workflows/` dir holds repo-ops reports, NOT dev
+  processes → our phased workflow type (phases/checklists/gates) is original;
+  nothing upstream defines it.
+- uv 0.12.x: bare `uv sync` does NOT install workspace members when the root
+  project has `[tool.uv] package = false` — it even UNINSTALLS previously
+  installed members (pytest then fails with ModuleNotFoundError for
+  agent_hq_server). Use `uv sync --all-packages` (CI already does this;
+  the cheat-sheet below was fixed to match).
+- mcp SDK 1.30.0 (pinned since Phase 0): calling tools/call with an unknown
+  tool name returns a TOOL-level error — result content "Unknown tool: ...",
+  isError=true — NOT a JSON-RPC protocol error. Older SDKs returned a
+  JSON-RPC error; the 2026-09-26 stdio test asserted the old shape and was
+  red on 1.30. Test renamed to *_is_tool_error.
+- Python type-level module `textio` (used for TextIOBase in type stubs) is
+  NOT importable at runtime — pyright flags `import textio` as unresolved.
+  Use `typing.IO[str]` (or `io.TextIOBase`) instead.
+- pyright needs a node runtime: `npx pyright`/`npx pyright` only works where
+  node exists. Fallback that works in this sandbox: `uvx pyright` (uses the
+  repo pyrightconfig.json, 0 errors as of 2026-10-05).
+- graphify CLI (managed CPython 3.10) intermittently dies with
+  "ModuleNotFoundError: No module named 'encodings'" — a retry succeeds.
+  graphify-out/graph.json is built per commit; after code changes run
+  `graphify update .` (no API cost). Disambiguate explain targets as
+  `path::Symbol` when a name matches nodes in multiple files.
+- Catalog.find(kind, slug) returns a UNION of all item dataclasses — narrow
+  with isinstance(x, SpecificKind) before use (pyright flags direct use).
+- ProfileItem.frontmatter is a plain pydantic model, but ProfileItem is a
+  FROZEN dataclass → mutating defaults in tests requires rebuilding the item,
+  not in-place append.
+- pathspec: 'gitwildmatch' is deprecated in current releases (DeprecationWarning
+  in test output); matcher.py still uses it — migrate to 'gitignore' when the
+  next pathspec bump lands, watch gitignore-vs-glob semantic differences.
+
+
+5. RESEARCH & WHERE TO FIND IT
+------------------------------
+- awesome-copilot (the content convention we follow, MIT):
+  https://github.com/github/awesome-copilot
+  Key paths: agents/*.agent.md (frontmatter: name, description, model, tools),
+  instructions/*.instructions.md (description, applyTo),
+  skills/<name>/SKILL.md (name, description, license, metadata…),
+  .schemas/collection.schema.json (official item-path/kind rules).
+  Raw file URL pattern for pinning fixtures:
+    https://raw.githubusercontent.com/github/awesome-copilot/main/<path>
+  Our fixtures (pinned from main on 2026-09-24): server/tests/fixtures/
+  content/{agents(3),instructions(3),skills(2)}.
+- MCP spec + Python SDK (FastMCP): https://modelcontextprotocol.io and
+  https://github.com/modelcontextprotocol/python-sdk — Phase 2 will wire
+  FastMCP + StdioServerTransport; tools derive JSON schema from typed handlers.
+- Design detail lives in documents/initial-plan/technical.md (schemas §4,
+  tool contracts §5, decisions §6, risks §7) — consult it, don't reinvent.
+
+
+6. COMMAND CHEAT-SHEET
+----------------------
+  uv sync --all-packages                    # install/refresh venv (plain `uv sync`
+                                            # does NOT install the server/cli members!)
+  uv run pytest                             # tests (60)
+  uv run ruff check . && uv run ruff format --check .
+  uvx pyright                               # type check (uses pyrightconfig.json;
+                                            # `npx pyright` where node exists)
+  uv run python server/scripts/check_lines.py
+  uv run agent-hq-server                    # MCP server over stdio
+  uv run agent-hq version                   # CLI entry
+  graphify update .                         # refresh the repo graph after code changes
